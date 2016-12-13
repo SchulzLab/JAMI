@@ -304,9 +304,14 @@ public class RunExamples {
         int numberOfPermutations=1000;
 
         long timeStart=System.currentTimeMillis();
-        computeCMIAndStore(geneExpr,miRExpr,gene1,gene2,outputFileName,numberOfPermutations);
+        computeCMIAndStore(geneExpr,miRExpr,gene1,gene2,outputFileName,numberOfPermutations,false);
         long end = System.currentTimeMillis();
-        System.out.println("time: " + (end - timeStart));
+        System.out.println("single thread time: " + (end - timeStart));
+
+        timeStart=System.currentTimeMillis();
+        computeCMIAndStore(geneExpr,miRExpr,gene1,gene2,outputFileName,numberOfPermutations, true);
+        end = System.currentTimeMillis();
+        System.out.println("parallel threads time: " + (end - timeStart));
     }
 
 
@@ -357,12 +362,12 @@ public class RunExamples {
 
         int numberOfPermutations=1000;
 
-           long timeStart=System.currentTimeMillis();
+        long timeStart=System.currentTimeMillis();
         for (int i = 0; i < listPairs.size(); i++) {
             String gene1=listPairs.get(i)[0];
             String gene2=listPairs.get(i)[1];
             String outputFileName="data/outputCMI"+gene1+"-"+gene2+".txt";
-            computeCMIAndStore(geneExpr,miRExpr,gene1,gene2,outputFileName,numberOfPermutations);
+            computeCMIAndStore(geneExpr,miRExpr,gene1,gene2,outputFileName,numberOfPermutations, false);
         }
 
         long end = System.currentTimeMillis();
@@ -382,10 +387,11 @@ public class RunExamples {
      * @param outputFileName name of output file
      * @param numberOfPermutations number of permutations to use for p-value
      */
-    public static void computeCMIAndStore(ReadExpressionData geneData,ReadExpressionData miRNAData,String gene1,String gene2,String outputFileName,int numberOfPermutations){
+    public static void computeCMIAndStore(ReadExpressionData geneData,ReadExpressionData miRNAData,String gene1,String gene2,String outputFileName,int numberOfPermutations,
+                                          boolean parallel){
         int gene1Index=geneData.getNameToData().get(gene1);
         int gene2Index=geneData.getNameToData().get(gene2);
-        computeCMIAndStore(geneData,miRNAData,gene1Index,gene2Index,outputFileName,numberOfPermutations);
+        computeCMIAndStore(geneData,miRNAData,gene1Index,gene2Index,outputFileName,numberOfPermutations, parallel);
     }
 
 
@@ -399,7 +405,23 @@ public class RunExamples {
      * @param outputFileName name of output file
      * @param numberOfPermutations number of permutations to use for p-value
      */
-    public static void computeCMIAndStore(ReadExpressionData geneData,ReadExpressionData miRNAData,int gene1,int gene2,String outputFileName,int numberOfPermutations){
+    public static void computeCMIAndStore(ReadExpressionData geneData,
+                                          ReadExpressionData miRNAData,
+                                          int gene1,
+                                          int gene2,
+                                          String outputFileName,
+                                          int numberOfPermutations){
+        computeCMIAndStore(geneData, miRNAData, gene1, gene2,
+                outputFileName, numberOfPermutations, false);
+    }
+
+    public static void computeCMIAndStore(ReadExpressionData geneData,
+                                          ReadExpressionData miRNAData,
+                                          int gene1,
+                                          int gene2,
+                                          String outputFileName,
+                                          int numberOfPermutations,
+                                          boolean parallel){
         double[] gene1Data = geneData.getExpressionData().get(gene1);
         double[] gene2Data = geneData.getExpressionData().get(gene2);
         ArrayList<double[]> exprDatamiRna = miRNAData.getExpressionData();
@@ -414,28 +436,12 @@ public class RunExamples {
             bw.write("I("+gene1Name+",miRNA|"+gene2Name+")\n");
             bw.write("miRNA id\tCMI\tp-value\n");
             for (int i = 0; i < exprDatamiRna.size(); i++) {
-                ArrayList<double[]> data = new ArrayList<>();
-                data.add(gene1Data);
-                data.add(exprDatamiRna.get(i));
-                data.add(gene2Data);
-                CMIComplete cmiComplete = new CMIComplete(numberOfPermutations, data);
-                //cmiComplete.cmiAndPValuePseudoUniform(8);
-                cmiComplete.computeCMIandPValueBetterPartitioning();
-                bw.write(miRNAData.getIntegersToNames().get(i)+"\t"+cmiComplete.cmi+"\t"+cmiComplete.pValue+"\n");
-                bw.flush();
+                writeOutput(miRNAData, numberOfPermutations, parallel, gene2Data, gene1Data, exprDatamiRna, bw, i);
             }
             bw.write("\nI("+gene2Name+",miRNA|"+gene1Name+")\n");
             bw.write("miRNA id\tCMI\tp-value\n");
             for (int i = 0; i < exprDatamiRna.size(); i++) {
-                ArrayList<double[]> data = new ArrayList<>();
-                data.add(gene2Data);
-                data.add(exprDatamiRna.get(i));
-                data.add(gene1Data);
-                CMIComplete cmiComplete = new CMIComplete(numberOfPermutations, data);
-                //cmiComplete.cmiAndPValuePseudoUniform(8);
-                cmiComplete.computeCMIandPValueBetterPartitioning();
-                bw.write(miRNAData.getIntegersToNames().get(i)+"\t"+cmiComplete.cmi+"\t"+cmiComplete.pValue+"\n");
-                bw.flush();
+                writeOutput(miRNAData, numberOfPermutations, parallel, gene1Data, gene2Data, exprDatamiRna, bw, i);
             }
             bw.close();
         } catch (IOException e) {
@@ -443,7 +449,24 @@ public class RunExamples {
         }
     }
 
-
+    private static void writeOutput(ReadExpressionData miRNAData, int numberOfPermutations, boolean parallel, double[] gene1Data, double[] gene2Data, ArrayList<double[]> exprDatamiRna, BufferedWriter bw, int i) throws IOException {
+        ArrayList<double[]> data = new ArrayList<>();
+        data.add(gene2Data);
+        data.add(exprDatamiRna.get(i));
+        data.add(gene1Data);
+        CMIComplete cmiComplete;
+        //cmiComplete.cmiAndPValuePseudoUniform(8);
+        if(!parallel){
+            cmiComplete = new CMIComplete(numberOfPermutations, data);
+            cmiComplete.computeCMIandPValueBetterPartitioning();
+        }
+        else{
+            cmiComplete = new CMIComplete(numberOfPermutations, data, false);
+            cmiComplete.computeCMIandPValueParallel();
+        }
+        bw.write(miRNAData.getIntegersToNames().get(i)+"\t"+cmiComplete.cmi+"\t"+cmiComplete.pValue+"\n");
+        bw.flush();
+    }
 
 
 }

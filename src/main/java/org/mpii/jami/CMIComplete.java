@@ -1,13 +1,15 @@
 package org.mpii.jami;
 
 import java.util.*;
+import java.util.concurrent.ForkJoinPool;
+import java.util.concurrent.RecursiveTask;
 
 /**
  * Created by fuksova on 11/27/15.
  * For gene pair and one miRNA expression data, it computes CMI and evaluates its p-value via randomization.
  * There are several possibilities how to compute CMI.
  */
-public class CMIComplete {
+public class CMIComplete{
     public static ArrayList<ArrayList<Integer>> randomizedIndices; //used for randomizing data in third array of origData
     public static Random rand;
     ArrayList<double[]> origData;  //Input data for that CMI is computed
@@ -35,6 +37,12 @@ public class CMIComplete {
         this.origData=data;
         maxDeep=Integer.MAX_VALUE;
 
+    }
+
+    public CMIComplete(int numPerm,ArrayList<double[]> data, boolean noRand) {
+        this.numPerm=numPerm;
+        this.origData=data;
+        maxDeep=Integer.MAX_VALUE;
     }
 
     /**
@@ -67,6 +75,7 @@ public class CMIComplete {
         randCMI =new double[numPerm];
         cmi=ip.naivePartitioning();
         double[] toBeRandomized=origData.get(2);
+
         for (int i = 0; i < numPerm; i++) {
             double [] randomizedData=new double[toBeRandomized.length];
             ArrayList<Integer> currentPermutation = randomizedIndices.get(i);
@@ -99,13 +108,27 @@ public class CMIComplete {
      * However, drawbacks of this method should be considered. For instance, if all values in the
      * second data set are zeros, this methods outputs nonzero CMI value which can be moreover evaluated as significant.
      */
+    public void computeCMIandPValueParallel(){
+        IterativePartitioning ip=new IterativePartitioning(origData);
+        ip.maxDeep=maxDeep;
+        cmi=ip.iterativePartitioningBetter();
+        ForkJoinPool commonPool = ForkJoinPool.commonPool();
+
+        RecursiveTask<Integer> task = new CMIRecursiveTask(numPerm, cmi, ip, origData.get(2).length);
+        int sum = commonPool.invoke(task);
+        sum=Math.max(sum, 1);
+        pValue=sum/numPerm;
+    }
+
     public void computeCMIandPValueBetterPartitioning(){
         IterativePartitioning ip=new IterativePartitioning(origData);
         ip.maxDeep=maxDeep;
-        randCMI =new double[numPerm];
         cmi=ip.iterativePartitioningBetter();
+        randCMI =new double[numPerm];
+        cmi=ip.naivePartitioning();
         double[] toBeRandomized=origData.get(2);
-         for (int i = 0; i < numPerm; i++) {
+
+        for (int i = 0; i < numPerm; i++) {
 
             ArrayList<Integer> currentPermutation = randomizedIndices.get(i);
             Integer[] randomizedSorted=new Integer[toBeRandomized.length];
@@ -128,10 +151,6 @@ public class CMIComplete {
             IterativePartitioning ipRand=new IterativePartitioning(sorted,inverese);
             ipRand.maxDeep=maxDeep;
             randCMI[i]=ipRand.iterativePartitioningBetter();
-//             double control=ipRand.computeCMIInGrid(ipRand.treeRoot);
-//             if(Math.abs(randCMI[i]-control)>0.00001){
-//                 System.out.println("CMI differs");
-//             }
         }
         double sum=0;
         for (int i = 0; i < numPerm; i++) {
@@ -139,12 +158,10 @@ public class CMIComplete {
                 sum=sum+1.0;
             }
         }
-        sum=Math.max(sum,1.0);
+
+        sum=Math.max(sum, 1.0);
         pValue=sum/numPerm;
-
-
     }
-
 
     /**
      * This function uses CMI computation on uniform grid
