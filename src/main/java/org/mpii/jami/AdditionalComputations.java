@@ -1,3 +1,5 @@
+package org.mpii.jami;
+
 /**
  * Created by fuksova on 1/22/16.
  * Some basic mathematical methods that can be useful

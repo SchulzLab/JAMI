@@ -1,3 +1,5 @@
+package org.mpii.jami;
+
 import java.util.Random;
 
 /**

@@ -1,3 +1,5 @@
+package org.mpii.jami;
+
 import org.apache.commons.math3.special.Beta;
 
 /**

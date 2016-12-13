@@ -1,3 +1,5 @@
+package org.mpii.jami;
+
 /**
  * Created by fuksova on 12/16/15.
  * Intended to be used in ScoreStructure to agree with original q-values computation. Not used now

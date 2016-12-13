@@ -1,3 +1,5 @@
+package org.mpii.jami;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 

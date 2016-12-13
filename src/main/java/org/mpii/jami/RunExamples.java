@@ -1,3 +1,5 @@
+package org.mpii.jami;
+
 import java.io.*;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -17,7 +19,7 @@ public class RunExamples {
      */
     public static void readExpressionDataTest(){
         //Current version assumes that names of genes that we want to explore are given
-        ArrayList<String> allNames=ReadFiles.extractNamesFromColumn("new_data/uniqueGeneList.txt", "\t");
+        ArrayList<String> allNames=ReadFiles.extractNamesFromColumn("new_data/uniqueGeneList.txt", "\t", false);
 
         ReadExpressionData readColumn=new ReadExpressionData(allNames);
         readColumn.modifyName=true;
@@ -54,7 +56,7 @@ public class RunExamples {
      * those various methods.
      */
     public static void newScoreComputationBetterIP(){
-        ArrayList<String> allNames=ReadFiles.extractNamesFromColumn("data/expr1", "\t");
+        ArrayList<String> allNames=ReadFiles.extractNamesFromColumn("data/expr1", "\t", false);
         ArrayList<String> geneNames=new ArrayList<>(2);
         geneNames.add(allNames.remove(0));
         geneNames.add(allNames.remove(0));
@@ -199,7 +201,7 @@ public class RunExamples {
     public static void basicCupidExampleDemo() {
         //In file expr1 are stored expression data for two genes and for a set of miRNA. The data for genes
         //are at the begininning of the file
-        ArrayList<String> allNames = ReadFiles.extractNamesFromColumn("data/expr1", "\t");
+        ArrayList<String> allNames = ReadFiles.extractNamesFromColumn("data/expr1", "\t", false);
         ArrayList<String> geneNames = new ArrayList<>(2);
         geneNames.add(allNames.remove(0));
         geneNames.add(allNames.remove(0));
@@ -285,22 +287,21 @@ public class RunExamples {
         geneNames.add(gene2);
         ReadExpressionData geneExpr=new ReadExpressionData(geneNames);
         geneExpr.skipFirst=true;
-        geneExpr.numberOfSamples =20531;
+        geneExpr.numberOfSamples=20531;
         geneExpr.separator="\t";
         geneExpr.genesAreRows=true;
         geneExpr.modifyName=true;
         geneExpr.readFile(fileGeneExpr);
 
-        ArrayList<String> namesMiRNA= ReadFiles.extractNamesFromLine(filemiRExpr," ",0);
+        ArrayList<String> namesMiRNA= ReadFiles.extractNamesFromColumn(filemiRExpr,"\t", true);
         ReadExpressionData miRExpr=new ReadExpressionData(namesMiRNA);
         miRExpr.skipFirst=true;
-        miRExpr.separator=" ";
-        miRExpr.genesAreRows=false;
-        miRExpr.modifyName=false;   //The names are extracted from the file including quotes, so the quotes should not be removed when comparing names
+        miRExpr.separator="\t";
+        miRExpr.genesAreRows=true;
+        miRExpr.modifyName=true;   //The names are extracted from the file including quotes, so the quotes should not be removed when comparing names
         miRExpr.readFile(filemiRExpr);
 
         int numberOfPermutations=1000;
-
 
         long timeStart=System.currentTimeMillis();
         computeCMIAndStore(geneExpr,miRExpr,gene1,gene2,outputFileName,numberOfPermutations);

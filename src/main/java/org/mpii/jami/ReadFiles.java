@@ -1,3 +1,5 @@
+package org.mpii.jami;
+
 import java.io.*;
 import java.util.ArrayList;
 import java.util.regex.Pattern;
@@ -18,7 +20,7 @@ public class ReadFiles {
      * @param indices The array should contain indices of columns where the names are stored
      * @return extracted names
      */
-    public static ArrayList<String> extractNamesFromColumn(String fileName, String separator, int[] indices){
+    public static ArrayList<String> extractNamesFromColumn(String fileName, String separator, boolean skipFirst, int[] indices){
         Pattern pattern = Pattern.compile(separator);
         FileReader fr;
         ArrayList<String> names=new ArrayList<>();
@@ -27,7 +29,13 @@ public class ReadFiles {
             BufferedReader br = new BufferedReader(fr);
             String line=br.readLine();
             while (line!=null) {
+                if(skipFirst){
+                    br.readLine();
+                    skipFirst = false;
+                    continue;
+                }
                 String[] entries = pattern.split(line);
+
                 for (int i = 0; i < indices.length; i++) {
                     names.add(entries[indices[i]]);
                 }
@@ -86,9 +94,9 @@ public class ReadFiles {
      * @param separator How are the columns in the file separated
      * @return extracted names
      */
-    public static ArrayList<String> extractNamesFromColumn(String fileName, String separator){
+    public static ArrayList<String> extractNamesFromColumn(String fileName, String separator, boolean skipFirst){
         int[] indices=new int[1];
-        return extractNamesFromColumn(fileName, separator, indices);
+        return extractNamesFromColumn(fileName, separator, skipFirst, indices);
     }
 
     /**

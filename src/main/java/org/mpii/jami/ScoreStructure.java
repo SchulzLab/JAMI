@@ -1,3 +1,5 @@
+package org.mpii.jami;
+
 import java.io.*;
 import java.lang.reflect.Array;
 import java.text.DecimalFormat;
