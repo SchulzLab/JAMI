@@ -2,6 +2,8 @@ package org.mpii.jami;
 
 import java.io.*;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.IllegalFormatException;
 import java.util.regex.Pattern;
 
 /**
@@ -123,6 +125,41 @@ public class ReadFiles {
     }
 
 
+    public static HashMap<String,String[]> geneToMiRNA(String fileName,String separatorMain,String separatorMiRNA,boolean skipFirst){
+        Pattern pattern = Pattern.compile(separatorMain);
+        Pattern patternMiRNA=Pattern.compile(separatorMiRNA);
+        FileReader fr;
+        HashMap<String,String[]> genesWithMiRNA=new HashMap<>();
+        try {
+            fr = new FileReader(fileName);
+            BufferedReader br = new BufferedReader(fr);
+            String line=br.readLine();
+            while (line!=null) {
+                if(skipFirst){
+                    br.readLine();
+                    skipFirst = false;
+                    continue;
+                }
+                String[] entries = pattern.split(line);
+
+                if(entries.length!=2){  //maybe add possibility that there is no miRNA
+                    throw new IllegalArgumentException("Wrong line format in file "+fileName);
+                }
+                String geneName=entries[0];
+                String[] allMiRNA=patternMiRNA.split(entries[1]);
+                genesWithMiRNA.put(geneName,allMiRNA);
+                line=br.readLine();
+            }
+            br.close();
+
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        return genesWithMiRNA;
+    }
 
 
 
