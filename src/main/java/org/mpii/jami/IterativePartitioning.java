@@ -388,6 +388,11 @@ public class IterativePartitioning {
                 newCubes.get(sum).addPoint(pointOrder);
             }
 
+//            for (Cube newCube : newCubes) {
+//                testCube(newCube);
+//            }
+
+
             if(useSplit(currentCube,newCubes)||currentCube.equals(initialCube)){
                 ArrayList<TreeNode> newNodes=new ArrayList<>();
                 for (int i = 0; i < dimCombinat; i++) {

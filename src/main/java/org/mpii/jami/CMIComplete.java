@@ -125,7 +125,7 @@ public class CMIComplete{
         ip.maxDeep=maxDeep;
         cmi=ip.iterativePartitioningBetter();
         randCMI =new double[numPerm];
-        cmi=ip.naivePartitioning();
+        //cmi=ip.naivePartitioning();
         double[] toBeRandomized=origData.get(2);
 
         for (int i = 0; i < numPerm; i++) {

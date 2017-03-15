@@ -37,9 +37,9 @@ public class CompleteRun {
     }
 
 
-    public void moreGenePairsNew(){
+    public void runComputation(){
         ArrayList<String[]> listPairs=new ArrayList<>();
-        String pairSplit="\t";
+        String pairSplit=separator;
         Pattern pattern = Pattern.compile(pairSplit);
         ArrayList<String> geneNames=new ArrayList<>();
         try {
@@ -60,23 +60,29 @@ public class CompleteRun {
 
 
         geneExpr=new ReadExpressionData(geneNames);
-        geneExpr.skipFirst=true;
+
+        geneExpr.numberOfSamples =20531; //the two lines are to be commented for the new format
+        geneExpr.genesAreRows=true;
+        geneExpr.skipFirst=false;
+
+      //  geneExpr.skipFirst=true;
         geneExpr.separator="\t";
-        geneExpr.genesAreRows=false;
+        //geneExpr.genesAreRows=false;
         geneExpr.modifyName=false;
         geneExpr.readFile(fileGeneExpr);
 
         ArrayList<String> namesMiRNA= ReadFiles.extractNamesFromLine(filemiRExpr," ",0);
         miRExpr=new ReadExpressionData(namesMiRNA);
         miRExpr.skipFirst=true;
-        miRExpr.separator="\t";
+        //miRExpr.separator=separator;
+        miRExpr.separator=" ";  //to be changed to \t in final
         miRExpr.genesAreRows=false;
         miRExpr.modifyName=false;
         miRExpr.readFile(filemiRExpr);
 
         HashMap<String, Integer> miNameToData = miRExpr.getNameToData();
 
-        HashMap<String, String[]> genesToMiRNA = ReadFiles.geneToMiRNA(fileGeneExpr, "\t", ",", true);
+        HashMap<String, String[]> genesToMiRNA = ReadFiles.geneToMiRNA(fileGenesMiRNA, "\t", ",", false);
         genesToMiRNAInt=new HashMap<>();
         for (Map.Entry<String, String[]> stringEntry : genesToMiRNA.entrySet()) {
             int length = stringEntry.getValue().length;
@@ -147,9 +153,9 @@ public class CompleteRun {
         //File outputFile=new File(outputFileName);
 
             HashSet<Integer> setOfMiRNA=new HashSet<>();
-            setOfMiRNA.addAll(genesToMiRNAInt.get(gene1));
+            setOfMiRNA.addAll(genesToMiRNAInt.get(gene1Name));
             ArrayList<Integer> intersection=new ArrayList<>();
-            ArrayList<Integer> listToGene2=genesToMiRNAInt.get(gene2);
+            ArrayList<Integer> listToGene2=genesToMiRNAInt.get(gene2Name);
             for (Integer integer : listToGene2) {
                 if(setOfMiRNA.contains(integer)){
                     intersection.add(integer);
@@ -197,6 +203,7 @@ public class CompleteRun {
         CMIComplete cmiComplete;
         //cmiComplete.cmiAndPValuePseudoUniform(8);
         if(!parallel){
+            CMIComplete.initRandomized(geneInterData.length,numberOfPermutations);
             cmiComplete = new CMIComplete(numberOfPermutations, data);
             cmiComplete.computeCMIandPValueBetterPartitioning();
         }
