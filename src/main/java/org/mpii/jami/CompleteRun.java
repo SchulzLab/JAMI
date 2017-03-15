@@ -61,7 +61,7 @@ public class CompleteRun {
 
         geneExpr=new ReadExpressionData(geneNames);
 
-        geneExpr.numberOfSamples =20531; //the two lines are to be commented for the new format
+        geneExpr.numberOfSamples =20531; //the three lines are to be commented for the new format
         geneExpr.genesAreRows=true;
         geneExpr.skipFirst=false;
 
