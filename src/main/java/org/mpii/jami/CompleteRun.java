@@ -160,7 +160,7 @@ public class CompleteRun {
             try {
 
                 //CMI(gene1Name,miRNA|gene2Name)
-                for (int i = 0; i < intersection.size(); i++) {   //Here, instead of 0 to size would be a list of integers
+                for (int i = 0; i < intersection.size(); i++) {
                     int index=intersection.get(i);
                     String miRNAName=miRExpr.getIntegersToNames().get(index);
                     bw.write(gene1Name+separator+gene2Name+separator+miRNAName+separator);
