@@ -162,6 +162,34 @@ public class ReadFiles {
     }
 
 
+    public static ArrayList<String[]> readTriples(String fileName,String separatorMain,boolean skipFirst){
+        Pattern pattern = Pattern.compile(separatorMain);
+        ArrayList<String[]> result=new ArrayList<>();
+        FileReader fr;
+
+        try {
+            fr = new FileReader(fileName);
+            BufferedReader br = new BufferedReader(fr);
+            String line=br.readLine();
+            while (line!=null) {
+                if(skipFirst){
+                    br.readLine();
+                    skipFirst = false;
+                    continue;
+                }
+                String[] entries = pattern.split(line);
+                result.add(entries);
+            }
+            br.close();
+
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        return result;
+    }
 
 
 
