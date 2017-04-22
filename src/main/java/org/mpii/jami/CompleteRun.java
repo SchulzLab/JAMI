@@ -23,8 +23,9 @@ public class CompleteRun {
     private  BufferedWriter bw;
     private String separator;
     HashMap<String,ArrayList<Integer>> genesToMiRNAInt;
-    private ArrayList<int[]> listOfTriples;
+    private ArrayList<String[]> listOfTriples;
     private boolean tripleFormat;
+    public static int numberOfSamples=364;  //this can be removed for the transposed format
 
     public CompleteRun(String fileGenesMiRNA,String fileGeneExpr,String filemiRExpr,String outputFileName,int numberOfPermutations,String separator,boolean parallel,boolean tripleFormat){
         this.outputFileName=outputFileName;
@@ -54,33 +55,24 @@ public class CompleteRun {
         ArrayList<String> namesMiRNA=new ArrayList<>(miRNAnamesToUse);
         miRNAnamesToUse.clear();
         miRExpr=new ReadExpressionData(namesMiRNA);
-        HashMap<String, Integer> miNameToData = miRExpr.getNameToData();
         geneExpr=new ReadExpressionData(geneNames);
 
-        genesToMiRNAInt=new HashMap<>();
-        for (Map.Entry<String, String[]> stringEntry : genesToMiRNA.entrySet()) {
-            int length = stringEntry.getValue().length;
-            ArrayList<Integer> miRNAIntegers=new ArrayList<>();
-            for (int i=0;i<length;i++){
-                miRNAIntegers.add(miNameToData.get(stringEntry.getValue()[i]));
-            }
-            genesToMiRNAInt.put(stringEntry.getKey(),miRNAIntegers);
-        }
+
 
         listOfTriples=new ArrayList<>();
 
         for (int i = 0; i < geneNames.size(); i++) {
             String gene=geneNames.get(i);
-            int gene1Index=geneExpr.getNameToData().get(gene);
-            HashSet<Integer> gene1set=new HashSet<>(genesToMiRNAInt.get(gene));
+            HashSet<String> gene1set=new HashSet<>();
+            for (int j = 0; j < genesToMiRNA.get(gene).length; j++) {
+                gene1set.add(genesToMiRNA.get(gene)[j]);
+            }
             for (int j = 0; j < i; j++) {
                 String gene2=geneNames.get(j);
-                int gene2index=geneExpr.getNameToData().get(gene2);
-                ArrayList<Integer> gene2list=genesToMiRNAInt.get(gene2);
-                for (Integer miRNAid : gene2list) {
+                String[] gene2list=genesToMiRNA.get(gene2);
+                for (String miRNAid : gene2list) {
                     if(gene1set.contains(miRNAid)){
-
-                        int[] triple={gene1Index,gene2index,miRNAid};
+                        String[] triple={gene,gene2,miRNAid};
                         listOfTriples.add(triple);
                     }
                 }
@@ -90,32 +82,41 @@ public class CompleteRun {
     }
 
     private void triplesVariant2(){
-        ArrayList<String[]> stringTriples = ReadFiles.readTriples(fileGenesMiRNA, "\t", false);
+       listOfTriples= ReadFiles.readTriples(fileGenesMiRNA, "\t", false);
         HashSet<String> geneNamesHS=new HashSet<>();
         HashSet<String> namesMiRNAHS=new HashSet<>();
-        for (String[] stringTriple : stringTriples) {
+
+        int counter=0;
+        int bigCounter=0;
+        for (String[] stringTriple : listOfTriples) {
             geneNamesHS.add(stringTriple[0]);
             geneNamesHS.add(stringTriple[1]);
             namesMiRNAHS.add(stringTriple[2]);
+//            counter++;
+//            bigCounter++;
+//            if(counter==100){
+//                counter=0;
+//                System.out.println("big counter: "+bigCounter);
+//            }
         }
 
         ArrayList<String> geneNames=new ArrayList<>(geneNamesHS);
         ArrayList<String> namesMiRNA=new ArrayList<>(namesMiRNAHS);
 
-        for (String[] stringTriple : stringTriples) {
-            int index1=geneExpr.getNameToData().get(stringTriple[0]);
-            int index2=geneExpr.getNameToData().get(stringTriple[1]);
-            int index3=miRExpr.getNameToData().get(stringTriple[2]);
-            int[] oneTriple={index1,index2,index3};
-            listOfTriples.add(oneTriple);
-        }
-
         miRExpr=new ReadExpressionData(namesMiRNA);
         geneExpr=new ReadExpressionData(geneNames);
+
+       System.out.println("after file read");
+
+
+        System.out.println("String to int");
+
+
     }
 
     public void runComputation(){
 
+        System.out.println("start");
         if(tripleFormat){
             triplesVariant2();
         }
@@ -123,24 +124,38 @@ public class CompleteRun {
             triplesVariant1();
         }
 
-        geneExpr.numberOfSamples =20531; //the three lines are to be commented for the new format
-        geneExpr.genesAreRows=true;
-        geneExpr.skipFirst=false;
+        System.out.println("triples read");
+      //  geneExpr.numberOfSamples =20531;
 
-      //  geneExpr.skipFirst=true;
-        geneExpr.separator="\t";
-        //geneExpr.genesAreRows=false;
+        geneExpr.numberOfSamples =this.numberOfSamples; //the three lines are to be commented for the new format
+        geneExpr.genesAreRows=false;
+        geneExpr.skipFirst=true;
+
+      //  geneExpr.genesAreRows=true;
+       // geneExpr.skipFirst=false;
+
+
+        geneExpr.separator=this.separator;
         geneExpr.modifyName=false;
         geneExpr.readFile(fileGeneExpr);
 
 
-        miRExpr.skipFirst=true;
+        System.out.println("genes read");
+
         //miRExpr.separator=separator;
-        miRExpr.separator=" ";  //to be changed to \t in final
+
+        miRExpr.numberOfSamples=this.numberOfSamples;   //the three lines are to be commented for the new format
         miRExpr.genesAreRows=false;
+        miRExpr.skipFirst=true;
+
+//        miRExpr.genesAreRows=true;
+//        miRExpr.skipFirst=false;
+
+        miRExpr.separator=this.separator;  //to be changed to \t in final
         miRExpr.modifyName=false;
         miRExpr.readFile(filemiRExpr);
 
+        System.out.println("miRNA read");
 
         long timeStart=System.currentTimeMillis();
 
@@ -158,8 +173,18 @@ public class CompleteRun {
             bw.write(separator);
             bw.write("pValue\n");
 
-            for (int[] oneTriple : listOfTriples) {
-                computeCMIAndStore(oneTriple[0],oneTriple[1],oneTriple[2]);
+            for (String[] oneTriple : listOfTriples) {
+                Integer gene1Index=geneExpr.getNameToData().get(oneTriple[0]);
+                Integer gene2Index=geneExpr.getNameToData().get(oneTriple[1]);
+                Integer miRNAIndex=miRExpr.getNameToData().get(oneTriple[2]);
+
+                if(gene1Index!=null&&gene2Index!=null&&miRNAIndex!=null){
+                    computeCMIAndStore(gene1Index,gene2Index,miRNAIndex);
+                }
+                else{
+                    System.out.println("not existing name");
+                }
+
             }
 
             bw.close();
@@ -175,6 +200,7 @@ public class CompleteRun {
 
     }
 
+    //TODO work with the triples only by means of strings. Expression file structures are reduced after expression reading, the indices are different!
 
     public void computeCMIAndStore(int gene1, int gene2, int miRNA) {
         double[] gene1Data = geneExpr.getExpressionData().get(gene1);

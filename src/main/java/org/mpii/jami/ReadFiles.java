@@ -170,15 +170,15 @@ public class ReadFiles {
         try {
             fr = new FileReader(fileName);
             BufferedReader br = new BufferedReader(fr);
-            String line=br.readLine();
+            String line;
+            if(skipFirst){
+                br.readLine();
+            }
+            line=br.readLine();
             while (line!=null) {
-                if(skipFirst){
-                    br.readLine();
-                    skipFirst = false;
-                    continue;
-                }
                 String[] entries = pattern.split(line);
                 result.add(entries);
+                line=br.readLine();
             }
             br.close();
 
