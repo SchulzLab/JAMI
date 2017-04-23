@@ -127,6 +127,7 @@ public class ReadExpressionData {
             expressionData=newExpressionData;
 
             br.close();
+            numberOfSamples=expressionData.get(0).length;
         } catch (IOException e1) {
             e1.printStackTrace();
         }
@@ -239,9 +240,14 @@ public class ReadExpressionData {
 
     }
 
+    /**
+     * Rather do not use, unreliable counting.
+     * @param fileName
+     */
     private void readGenesAreColumns(String fileName){
         int lineNumber=(int)ReadFiles.getLineNumber(fileName);//seems to count one more
         if(skipFirst) lineNumber--;
+        numberOfSamples=lineNumber;
         readGenesAreColumns(fileName,lineNumber);
 
     }

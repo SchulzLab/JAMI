@@ -125,6 +125,16 @@ public class ReadFiles {
     }
 
 
+    /**
+     * Read files with genes-miRNA interactions. Every line contains one gene name and a set of miRNA names that
+     * are assumed to interact with this gene. The format of one line is: geneID, "separatorMain" and list of
+     * miRNA names separated by "separatorMiRNA".
+     * @param fileName Name of input file.
+     * @param separatorMain Separates the column with genes from the set of miRNA interacting with it.
+     * @param separatorMiRNA Separates miRNA names in on set.
+     * @param skipFirst Skip first line in the file.
+     * @return HashMap geneID->array of miRNA IDs.
+     */
     public static HashMap<String,String[]> geneToMiRNA(String fileName,String separatorMain,String separatorMiRNA,boolean skipFirst){
         Pattern pattern = Pattern.compile(separatorMain);
         Pattern patternMiRNA=Pattern.compile(separatorMiRNA);
@@ -162,8 +172,16 @@ public class ReadFiles {
     }
 
 
-    public static ArrayList<String[]> readTriples(String fileName,String separatorMain,boolean skipFirst){
-        Pattern pattern = Pattern.compile(separatorMain);
+    /**
+     * Reads file with triple of two genes and one miRNA names whose interactions will be tested.
+     * Every row contains one triple to test separated by "separator".
+     * @param fileName Name of file
+     * @param separator Column separator
+     * @param skipFirst Skip first row
+     * @return ArrayList with all triple from the file
+     */
+    public static ArrayList<String[]> readTriples(String fileName,String separator,boolean skipFirst){
+        Pattern pattern = Pattern.compile(separator);
         ArrayList<String[]> result=new ArrayList<>();
         FileReader fr;
 

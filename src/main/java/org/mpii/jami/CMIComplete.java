@@ -63,7 +63,7 @@ public class CMIComplete{
             randomizedIndices.add(newList);
         }
         long end=System.currentTimeMillis();
-        System.out.println("rand time: "+(end-start));
+       // System.out.println("rand time: "+(end-start));
 
     }
 
@@ -135,7 +135,7 @@ public class CMIComplete{
             Integer []randomizedInverse=new Integer[toBeRandomized.length];
             for (int j = 0; j < toBeRandomized.length; j++) {
 
-                Integer value = ip.inverseSortedIndices.get(2)[currentPermutation.get(j)];
+                Integer value = ip.inverseSortedIndices.get(2)[currentPermutation.get(j)];  //This is maybe not necessary. Maybe work directly with randomizedIndices and their inverse regardless this array.
                 randomizedInverse[j]= value;
                 randomizedSorted[value]=j;
             }
