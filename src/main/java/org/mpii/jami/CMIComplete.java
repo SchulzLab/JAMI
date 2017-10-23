@@ -117,7 +117,7 @@ public class CMIComplete{
         RecursiveTask<Integer> task = new CMIRecursiveTask(numPerm, cmi, ip, origData.get(2).length);
         int sum = commonPool.invoke(task);
         sum=Math.max(sum, 1);
-        pValue=sum/numPerm;
+        pValue=(double) sum/numPerm;
     }
 
     public void computeCMIandPValueBetterPartitioning(){

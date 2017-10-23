@@ -1,6 +1,7 @@
 package org.mpii.jami;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.*;
@@ -47,18 +48,18 @@ public class ReadExpressionData {
 
     /**
      * Reads the file and stores data
-     * @param fileName name of the file
+     * @param file name of the file
      */
-    public void readFile(String fileName){
+    public void readFile(File file){
         if(genesAreRows){
-            readGenesAreRows(fileName);
+            readGenesAreRows(file);
         }
         else{
             if(numberOfSamples >=1){
-                readGenesAreColumns(fileName, numberOfSamples);
+                readGenesAreColumns(file, numberOfSamples);
             }
             else{
-                readGenesAreColumns(fileName);
+                readGenesAreColumns(file);
             }
         }
     }
@@ -67,14 +68,14 @@ public class ReadExpressionData {
     /**
      * Reads file in such an input format where one row contain expression data for one certain gene/miRNA and one column
      * contains all gene/miRNA expression data for one sample.
-     * @param fileName Name of file with gene expression data
+     * @param file Name of file with gene expression data
       */
-    private void readGenesAreRows(String fileName){ //Add boolean modifyName
+    private void readGenesAreRows(File file){ //Add boolean modifyName
         expressionData = new ArrayList<>(names.size());
         Pattern pattern = Pattern.compile(separator);
         FileReader fr;
         try {
-            fr = new FileReader(fileName);
+            fr = new FileReader(file);
             BufferedReader br = new BufferedReader(fr);
 
             if (names.isEmpty()) {
@@ -156,12 +157,12 @@ public class ReadExpressionData {
     /**
      * Reads file in such an input format where one column contain expression data for one certain gene/miRNA and one
      * row contains all gene/miRNA expression data for one sample.
-     * @param fileName Name of file with gene expression data
+     * @param file Name of file with gene expression data
      * @param countOfSamples How many rows with numerical data does the file contain
      *                        numerical values, otherwise an error occurs.
      */
 
-    private void readGenesAreColumns(String fileName,int countOfSamples){
+    private void readGenesAreColumns(File file,int countOfSamples){
         expressionData = new ArrayList<>(names.size());
         Pattern pattern = Pattern.compile(separator);
         FileReader fr;
@@ -170,7 +171,7 @@ public class ReadExpressionData {
             temp=1;
         }
         try {
-            fr = new FileReader(fileName);
+            fr = new FileReader(file);
             BufferedReader br = new BufferedReader(fr);
 
             if (names.isEmpty()) {
@@ -242,13 +243,13 @@ public class ReadExpressionData {
 
     /**
      * Rather do not use, unreliable counting.
-     * @param fileName
+     * @param file
      */
-    private void readGenesAreColumns(String fileName){
-        int lineNumber=(int)ReadFiles.getLineNumber(fileName);//seems to count one more
+    private void readGenesAreColumns(File file){
+        int lineNumber=(int)ReadFiles.getLineNumber(file);//seems to count one more
         if(skipFirst) lineNumber--;
         numberOfSamples=lineNumber;
-        readGenesAreColumns(fileName,lineNumber);
+        readGenesAreColumns(file,lineNumber);
 
     }
 

@@ -1,5 +1,8 @@
 package org.mpii.jami;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import java.io.*;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -9,10 +12,14 @@ import java.util.HashSet;
  * Created by fuksova on 3/14/17.
  */
 public class CompleteRun {
-    private String outputFileName;
-    private String fileGenesMiRNA;
-    private  String fileGeneExpr;
-    private String filemiRExpr;
+    private static final Logger logger = LogManager.getLogger("JAMI");
+
+    public boolean completed;
+    public int tripletsWrittenToDisk;
+    private File outputFile;
+    private File fileGenesMiRNA;
+    private  File fileGeneExpr;
+    private File filemiRExpr;
     private boolean parallel;
     private int numberOfPermutations;
     private ReadExpressionData geneExpr;
@@ -26,8 +33,12 @@ public class CompleteRun {
     private boolean rowFormat;
 
 
-    public CompleteRun(String fileGenesMiRNA,String fileGeneExpr,String filemiRExpr,String outputFileName,int numberOfPermutations,boolean parallel,String separator,boolean tripleFormat,int numberOfSamplesInColumnFormat){
-        this.outputFileName=outputFileName;
+    public CompleteRun(File fileGenesMiRNA,File fileGeneExpr,File filemiRExpr,File outputFile,
+                       int numberOfPermutations,boolean parallel,String separator,boolean tripleFormat,
+                       int numberOfSamplesInColumnFormat){
+        this.tripletsWrittenToDisk = 0;
+        this.completed = false;
+        this.outputFile=outputFile;
         this.fileGenesMiRNA=fileGenesMiRNA;
         this.fileGeneExpr=fileGeneExpr;
         this.filemiRExpr=filemiRExpr;
@@ -46,8 +57,10 @@ public class CompleteRun {
     }
 
 
-    public CompleteRun(String fileGenesMiRNA,String fileGeneExpr,String filemiRExpr,String outputFileName,int numberOfPermutations,boolean parallel){
-        this.outputFileName=outputFileName;
+    public CompleteRun(File fileGenesMiRNA,File fileGeneExpr,File filemiRExpr,File outputFile,int numberOfPermutations,boolean parallel){
+        this.tripletsWrittenToDisk = 0;
+        this.completed = false;
+        this.outputFile=outputFile;
         this.fileGenesMiRNA=fileGenesMiRNA;
         this.fileGeneExpr=fileGeneExpr;
         this.filemiRExpr=filemiRExpr;
@@ -143,11 +156,15 @@ public class CompleteRun {
      */
     public void runComputation(){
 
-       // System.out.println("start");
+        if(this.completed){
+            logger.warn("Computation on this object was previously finished.");
+        }
         if(tripleFormat){
+            logger.debug("Reading CMI candidate file in triplet format.");
             readFileWithTriples();
         }
         else{
+            logger.debug("Reading CMI candidate file in set format.");
             readFileInSetFormat();
         }
 
@@ -189,9 +206,10 @@ public class CompleteRun {
 
         long timeStart=System.currentTimeMillis();
 
-        FileWriter fw = null;
+
+        FileWriter fw;
         try {
-            fw = new FileWriter(outputFileName);
+            fw = new FileWriter(outputFile);
             bw = new BufferedWriter(fw);
             bw.write("geneInteracting");
             bw.write(separator);
@@ -204,16 +222,24 @@ public class CompleteRun {
             bw.write("pValue\n");
 
             for (String[] oneTriple : listOfTriples) {
-                Integer gene1Index=geneExpr.getNameToData().get(oneTriple[0]);
-                Integer gene2Index=geneExpr.getNameToData().get(oneTriple[1]);
-                Integer miRNAIndex=miRExpr.getNameToData().get(oneTriple[2]);
+                Integer gene1Index = geneExpr.getNameToData().get(oneTriple[0]);
+                Integer gene2Index = geneExpr.getNameToData().get(oneTriple[1]);
+                Integer miRNAIndex = miRExpr.getNameToData().get(oneTriple[2]);
 
-                if(gene1Index!=null&&gene2Index!=null&&miRNAIndex!=null){
-                    computeCMIAndStore(gene1Index,gene2Index,miRNAIndex);
+                if (gene1Index != null && gene2Index != null && miRNAIndex != null) {
+                    computeCMIAndStore(gene1Index, gene2Index, miRNAIndex);
+                    this.tripletsWrittenToDisk++;
                 }
-//                else{
-//                    System.out.println("not existing name");
-//                }
+
+                if(gene1Index == null){
+                    logger.warn("Gene " + oneTriple[0] + " not found in gene expression data");
+                }
+                if(gene2Index == null){
+                    logger.warn("Gene " + oneTriple[1] + " not found in gene expression data");
+                }
+                if(miRNAIndex == null){
+                    logger.warn("miRNA " + oneTriple[2] + " not found in miRNA expression data");
+                }
 
             }
 
@@ -222,10 +248,11 @@ public class CompleteRun {
             e.printStackTrace();
         }
 
+        this.completed = true;
 
 
         long end = System.currentTimeMillis();
-     //   System.out.println("time: " + (end - timeStart));
+        logger.info("Computation finished in " + (end - timeStart)/1000 + "s");
 
 
     }

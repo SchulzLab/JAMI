@@ -1,90 +1,96 @@
 package org.mpii.jami;
 
+
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.kohsuke.args4j.Argument;
+import org.kohsuke.args4j.CmdLineParser;
+import org.kohsuke.args4j.Option;
+
+import java.io.File;
+import java.io.IOException;
+
 /**
  * Created by fuksova on 10/7/15.
  */
 public class Main {
 
+    private static final Logger logger = LogManager.getLogger("JAMI");
+
+    @Option(name="-output",usage="output file",metaVar="OUTPUT")
+    File outputFile = new File("JAMI_CMI_results.txt");
+
+    @Option(name="-set",usage="set if set notation should be used " +
+            "as opposed to defining individual triplets to be tested",metaVar="INPUT")
+    boolean setFormat;
+
+    @Argument(index = 2,usage="file defining possible interactions between genes and miRNAs (set format) or " +
+            "triplets of gene-gene-miRNA (use with -t)",metaVar="INPUT")
+    File genesMiRNA;
+
+    @Argument(index = 1,usage="miRNA expression data",metaVar="INPUT")
+    File filemiRNAExpr;
+
+    @Argument(index = 0,usage="gene expression data",metaVar="INPUT")
+    File fileGeneExpr;
+
+    @Option(name="-n",usage="number of samples, only required if samples in" +
+            " expression matrices are stored in rows. defaults to -1 if samples are stored in columns.",metaVar="INPUT")
+    int numberOfSamples = -1;
+
+    @Option(name="-sep",usage="column separator in input data. defaults to the tab separator.",metaVar="INPUT")
+    String separator = "\t";
+
+    @Option(name="-perm",usage="number of permutations for inferring empirical p-values. defaults to 1000.",metaVar="OPTIONS")
+    int numberOfPermutations = 1000;
+
+    @Option(name="-p",usage="parallel execution",metaVar="OPTIONS")
+    boolean parallel = false;
+
+
     /**
      * Uncomment one of the options
      * @param args
      */
-    public static void main(String []args) {
-//
-//        boolean tripleFormat=true;
-//        String genesMiRNA="/home/fuksova/MMCI/data_3_17/125_genes_ceRNA_interactions_to_test_in_cupid.txt";
-//        String filemiRNAExpr="/home/fuksova/MMCI/data_3_17/125_genes_mir_expr_to_test_in_cupid.txt";
-//        String fileGeneExpr="/home/fuksova/MMCI/data_3_17/125_genes_gene_expr_to_test_in_cupid.txt";
-//
-//        String outputFileName="outputPar.csv";
-//        String separator="\t";
-//        int numberOfPermutations=1000;
-//
-//        int numberOfSamples=364;
-//        boolean parallel=false;
+    public static void main(String []args) throws IOException {
 
+        logger.info("Java Conditional Mutual Information (JAMI) started.");
 
-        boolean tripleFormat=true;
-        String genesMiRNA;
-        String filemiRNAExpr;
-        String fileGeneExpr;
-        String outputFileName;
-        int numberOfSamples;
-
-        String separator="\t";
-        int numberOfPermutations=1000;
-        boolean parallel=false;
-
-
-        if(args.length>=4&&args.length<=6){
-            genesMiRNA=args[0];
-            fileGeneExpr=args[1];
-            filemiRNAExpr=args[2];
-            outputFileName=args[3];
-            if(args.length>=5){
-                if(args[4].equals("t")){
-                    tripleFormat=true;
-                }
-                else if(args[4].equals("s")){
-                    tripleFormat=false;
-                }
-                else{
-                    throw new IllegalArgumentException("Invalid settings for interaction file. Use either 's' or 't'.");
-                }
-            }
-            else{
-                tripleFormat=true;
-            }
-            if(args.length==6){
-                numberOfSamples=Integer.valueOf(args[5]);
-            }
-            else{
-                numberOfSamples=-1;
-            }
-
-
-            CompleteRun completeRun=new CompleteRun(genesMiRNA,fileGeneExpr,filemiRNAExpr,outputFileName,numberOfPermutations,parallel,separator,tripleFormat,numberOfSamples);
-            completeRun.runComputation();
-        }
-        else{
-            System.out.println("Input format:");
-            System.out.println("First four arguments are compulsory: 0-File with interactions, 1-File with gene expression, 2-File with miRNA expression,3-Output file name.");
-            System.out.println("4-Type of interaction file: 's' for set format, 't' for triple format, triple format is default.");
-            System.out.println("5-Number of samples. If this is set, column format is assumed, otherwise row format is assumed.");
-        }
-
-
-
+        new Main().runJAMI(args);
+        logger.info("Exit");
     }
 
+    public void runJAMI(String[] args) throws IOException{
+        CmdLineParser parser = new CmdLineParser(this);
 
+        try {
+            parser.parseArgument(args);
 
+            if(fileGeneExpr == null || !fileGeneExpr.exists()){
+                throw new IOException("ERROR: no gene expression file provided");
+            }
 
+            if(filemiRNAExpr == null || !filemiRNAExpr.exists()){
+                throw new IOException("ERROR: no miRNA expression file provided");
+            }
 
+            if(genesMiRNA == null || !genesMiRNA.exists()){
+                throw new IOException("ERROR: no gene expression file provided");
+            }
 
+            CompleteRun completeRun = new CompleteRun(genesMiRNA,fileGeneExpr,filemiRNAExpr,outputFile,
+                    numberOfPermutations,parallel,separator,!setFormat,numberOfSamples);
+            completeRun.runComputation();
 
+        } catch(Exception e){
+            System.err.println(e.getMessage());
+            System.err.println("java JAMI [options...] gene_expression_file mir_expression_file gene_mir_interactions");
+            parser.printUsage(System.err);
+            System.err.println();
 
-
+            return;
+        }
+    }
 }
 
 
