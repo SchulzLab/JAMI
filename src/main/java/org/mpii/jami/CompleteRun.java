@@ -5,151 +5,58 @@ import org.apache.logging.log4j.Logger;
 
 import java.io.*;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.HashSet;
+import java.util.concurrent.ForkJoinPool;
 
 /**
  * Created by fuksova on 3/14/17.
  */
 public class CompleteRun {
     private static final Logger logger = LogManager.getLogger("JAMI");
-
+    private Character separator = '\t';
     public boolean completed;
     public int tripletsWrittenToDisk;
     private File outputFile;
     private File fileGenesMiRNA;
-    private  File fileGeneExpr;
+    private File fileGeneExpr;
     private File filemiRExpr;
-    private boolean parallel;
     private int numberOfPermutations;
-    private ReadExpressionData geneExpr;
-    private ReadExpressionData miRExpr;
-    private  BufferedWriter bw;
-    private String separator;
-    HashMap<String,ArrayList<Integer>> genesToMiRNAInt;
-    private ArrayList<String[]> listOfTriples;
+    private ExpressionData geneExpr;
+    private ExpressionData miRExpr;
+    private BufferedWriter bw;
     private boolean tripleFormat;
-    private int numberOfSamplesInColumnFormat;  //Set for the column format to a positive number, for the row format to -1.
-    private boolean rowFormat;
-
+    private String method = "";
+    private int numberOfBins = 0;
+    private int numberOfThreads = -1;
 
     public CompleteRun(File fileGenesMiRNA,File fileGeneExpr,File filemiRExpr,File outputFile,
-                       int numberOfPermutations,boolean parallel,String separator,boolean tripleFormat,
-                       int numberOfSamplesInColumnFormat){
+                       int numberOfPermutations,boolean tripleFormat,
+                       String method, int numberOfBins, int numberOfThreads){
+        this.tripletsWrittenToDisk = 0;
+        this.completed = false;
+        this.method = method;
+        this.numberOfBins = numberOfBins;
+        this.outputFile=outputFile;
+        this.fileGenesMiRNA=fileGenesMiRNA;
+        this.fileGeneExpr=fileGeneExpr;
+        this.filemiRExpr=filemiRExpr;
+        this.tripleFormat=tripleFormat;
+        this.numberOfThreads=numberOfThreads;
+        this.numberOfPermutations=numberOfPermutations;
+    }
+
+    public CompleteRun(File fileGenesMiRNA,File fileGeneExpr,File filemiRExpr,File outputFile,
+                       int numberOfPermutations,boolean tripleFormat){
         this.tripletsWrittenToDisk = 0;
         this.completed = false;
         this.outputFile=outputFile;
         this.fileGenesMiRNA=fileGenesMiRNA;
         this.fileGeneExpr=fileGeneExpr;
         this.filemiRExpr=filemiRExpr;
-        this.parallel=parallel;
-        this.separator=separator;
         this.tripleFormat=tripleFormat;
         this.numberOfPermutations=numberOfPermutations;
-        this.numberOfSamplesInColumnFormat=numberOfSamplesInColumnFormat;
-        if(numberOfSamplesInColumnFormat>=0){
-            rowFormat=false;
-        }
-        else{
-            rowFormat=true;
-        }
-
     }
 
-
-    public CompleteRun(File fileGenesMiRNA,File fileGeneExpr,File filemiRExpr,File outputFile,int numberOfPermutations,boolean parallel){
-        this.tripletsWrittenToDisk = 0;
-        this.completed = false;
-        this.outputFile=outputFile;
-        this.fileGenesMiRNA=fileGenesMiRNA;
-        this.fileGeneExpr=fileGeneExpr;
-        this.filemiRExpr=filemiRExpr;
-        this.parallel=parallel;
-        this.separator="\t";
-        this.tripleFormat=true;
-        this.numberOfPermutations=numberOfPermutations;
-        this.numberOfSamplesInColumnFormat=-1;
-        rowFormat=true;
-    }
-
-    /**
-     * Reads file with gene-miRNA interactions in the format where every gene has assigned a set of miRNA.
-     * Then it creates triples of two genes and one miRNA to be tested based on common intersection of the miRNA sets
-     * of corresponding to genes.
-     * miRExpr and geneExpr are initialized with list of gene and miRNA names found in the file.
-     */
-    private void readFileInSetFormat(){
-        HashMap<String, String[]> genesToMiRNA = ReadFiles.geneToMiRNA(fileGenesMiRNA, "\t", ",", false);
-
-        ArrayList<String> geneNames=new ArrayList<>();
-        geneNames.addAll(genesToMiRNA.keySet());
-        HashSet<String> miRNAnamesToUse=new HashSet<>();
-
-        for (String[] miRNANames : genesToMiRNA.values()) {
-            for (int i = 0; i < miRNANames.length; i++) {
-                miRNAnamesToUse.add(miRNANames[i]);
-            }
-        }
-
-        ArrayList<String> namesMiRNA=new ArrayList<>(miRNAnamesToUse);
-        miRNAnamesToUse.clear();
-        miRExpr=new ReadExpressionData(namesMiRNA);
-        geneExpr=new ReadExpressionData(geneNames);
-
-
-
-        listOfTriples=new ArrayList<>();
-
-        for (int i = 0; i < geneNames.size(); i++) {
-            String gene=geneNames.get(i);
-            HashSet<String> gene1set=new HashSet<>();
-            for (int j = 0; j < genesToMiRNA.get(gene).length; j++) {
-                gene1set.add(genesToMiRNA.get(gene)[j]);
-            }
-            for (int j = 0; j < i; j++) {
-                String gene2=geneNames.get(j);
-                String[] gene2list=genesToMiRNA.get(gene2);
-                for (String miRNAid : gene2list) {
-                    if(gene1set.contains(miRNAid)){
-                        String[] triple={gene,gene2,miRNAid};
-                        listOfTriples.add(triple);
-                    }
-                }
-
-            }
-        }
-    }
-
-    /**
-     * Reads file with gene - miRNA interactions in the triple format. Initializes miRExpr and geneExpr with the
-     * names of genes and miRNAs found in the file.
-     */
-    private void readFileWithTriples(){
-       listOfTriples= ReadFiles.readTriples(fileGenesMiRNA, "\t", false);
-        HashSet<String> geneNamesHS=new HashSet<>();
-        HashSet<String> namesMiRNAHS=new HashSet<>();
-
-
-        for (String[] stringTriple : listOfTriples) {
-            geneNamesHS.add(stringTriple[0]);
-            geneNamesHS.add(stringTriple[1]);
-            namesMiRNAHS.add(stringTriple[2]);
-
-        }
-
-        ArrayList<String> geneNames=new ArrayList<>(geneNamesHS);
-        ArrayList<String> namesMiRNA=new ArrayList<>(namesMiRNAHS);
-
-        miRExpr=new ReadExpressionData(namesMiRNA);
-        geneExpr=new ReadExpressionData(geneNames);
-
-   //    System.out.println("after file read");
-
-
-     //   System.out.println("String to int");
-
-
-    }
 
     /**
      * Reads the files and performs all CMI computations.
@@ -157,88 +64,75 @@ public class CompleteRun {
     public void runComputation(){
 
         if(this.completed){
-            logger.warn("Computation on this object was previously finished.");
+            logger.error("Computation on this object was previously finished.");
         }
+
+        InteractionData interactions = new InteractionData();
+
         if(tripleFormat){
             logger.debug("Reading CMI candidate file in triplet format.");
-            readFileWithTriples();
+
+            interactions.readFileWithTriples(this.fileGenesMiRNA);
         }
         else{
             logger.debug("Reading CMI candidate file in set format.");
-            readFileInSetFormat();
+
+            interactions.readFileInSetFormat(this.fileGenesMiRNA);
         }
 
-      //  geneExpr.numberOfSamples =20531;
+        //read only gene and miRNA expression data we actually need
+        ArrayList<String> geneNames=new ArrayList<>(interactions.getGenes());
+        ArrayList<String> miRNANames=new ArrayList<>(interactions.getMiRNAs());
 
-        if(!rowFormat) {
-            geneExpr.numberOfSamples = this.numberOfSamplesInColumnFormat; //the three lines are to be commented for the new format
-            geneExpr.genesAreRows = false;
-            geneExpr.skipFirst = true;
-        }
-        else {
-             geneExpr.genesAreRows=true;
-             geneExpr.skipFirst=true;
-        }
+        miRExpr=new ExpressionData(miRNANames);
+        geneExpr=new ExpressionData(geneNames);
 
-        geneExpr.separator=this.separator;
-        geneExpr.modifyName=false;
         geneExpr.readFile(fileGeneExpr);
-
-
-
-        //miRExpr.separator=separator;
-
-        if(!rowFormat) {
-            miRExpr.numberOfSamples = this.numberOfSamplesInColumnFormat;   //the three lines are to be commented for the new format
-            miRExpr.genesAreRows = false;
-            miRExpr.skipFirst = true;
-        }
-        else {
-            miRExpr.genesAreRows=true;
-            miRExpr.skipFirst=true;
-        }
-        miRExpr.separator=this.separator;
-        miRExpr.modifyName=false;
         miRExpr.readFile(filemiRExpr);
 
-        CMIComplete.initRandomized(geneExpr.numberOfSamples,numberOfPermutations);
+        CMIComplete.initRandomized(geneExpr.getNumberOfSamples(), numberOfPermutations);
 
+        //parallelization
+        ForkJoinPool fjpool;
+
+        if(numberOfThreads == -1)
+             fjpool = ForkJoinPool.commonPool();
+        else fjpool = new ForkJoinPool(numberOfThreads);
 
         long timeStart=System.currentTimeMillis();
-
 
         FileWriter fw;
         try {
             fw = new FileWriter(outputFile);
             bw = new BufferedWriter(fw);
-            bw.write("geneInteracting");
+            bw.write("Interacting");
             bw.write(separator);
-            bw.write("geneConditional");
+            bw.write("Conditional");
             bw.write(separator);
-            bw.write("miRNA");
+            bw.write("Mediator");
             bw.write(separator);
             bw.write("CMI");
             bw.write(separator);
-            bw.write("pValue\n");
+            bw.write("p-value\n");
 
-            for (String[] oneTriple : listOfTriples) {
+            for (String[] oneTriple : interactions.getTriplets()) {
                 Integer gene1Index = geneExpr.getNameToData().get(oneTriple[0]);
                 Integer gene2Index = geneExpr.getNameToData().get(oneTriple[1]);
                 Integer miRNAIndex = miRExpr.getNameToData().get(oneTriple[2]);
 
                 if (gene1Index != null && gene2Index != null && miRNAIndex != null) {
-                    computeCMIAndStore(gene1Index, gene2Index, miRNAIndex);
+                    computeCMIAndStore(gene1Index, gene2Index, miRNAIndex, fjpool);
                     this.tripletsWrittenToDisk++;
                 }
 
                 if(gene1Index == null){
-                    logger.warn("Gene " + oneTriple[0] + " not found in gene expression data");
+                    logger.debug("Gene " + oneTriple[0] + " not found in gene expression data");
                 }
                 if(gene2Index == null){
-                    logger.warn("Gene " + oneTriple[1] + " not found in gene expression data");
+                    logger.debug("Gene " + oneTriple[1] + " not found in gene expression data");
                 }
                 if(miRNAIndex == null){
-                    logger.warn("miRNA " + oneTriple[2] + " not found in miRNA expression data");
+                    logger.debug("miRNA " + oneTriple[2] + " not found in miRNA expression data");
                 }
 
             }
@@ -265,7 +159,8 @@ public class CompleteRun {
      * @param gene2 index of gene2 in geneExpr
      * @param miRNA index of miRNA in miExpr
      */
-    public void computeCMIAndStore(int gene1, int gene2, int miRNA) {
+    public void computeCMIAndStore(int gene1, int gene2, int miRNA,
+                                   ForkJoinPool fjpool) {
         double[] gene1Data = geneExpr.getExpressionData().get(gene1);
         double[] gene2Data = geneExpr.getExpressionData().get(gene2);
         double[] miRNAData=miRExpr.getExpressionData().get(miRNA);
@@ -277,12 +172,12 @@ public class CompleteRun {
         try {
 
             bw.write(gene1Name + separator + gene2Name + separator + miRNAName + separator);
-            double[] result = computeTriple(gene2Data, gene1Data, miRNAData);
+            double[] result = computeTriple(gene2Data, gene1Data, miRNAData, fjpool);
             bw.write(result[0] + separator + result[1] + "\n");
             bw.flush();
 
             bw.write(gene2Name + separator + gene1Name + separator + miRNAName + separator);
-            result = computeTriple(gene1Data, gene2Data, miRNAData);
+            result = computeTriple(gene1Data, gene2Data, miRNAData, fjpool);
             bw.write(result[0] + separator + result[1] + "\n");
             bw.flush();
 
@@ -301,21 +196,25 @@ public class CompleteRun {
      * @param miRNAData expression data
      * @return First element is CMI, second is p-value;
      */
-    private double[] computeTriple(double[] geneCondData, double[] geneInterData, double[] miRNAData) {  //gene1Data is randomized
+    private double[] computeTriple(double[] geneCondData, double[] geneInterData, double[] miRNAData,
+                                   ForkJoinPool fjpool) {  //gene1Data is randomized
         ArrayList<double[]> data = new ArrayList<>();
         double[] result=new double[2];
         data.add(geneInterData);
         data.add(miRNAData);
         data.add(geneCondData);  //this is randomized
         CMIComplete cmiComplete;
-        //cmiComplete.cmiAndPValuePseudoUniform(8);
-        if(!parallel){
-            cmiComplete = new CMIComplete(numberOfPermutations, data);
-            cmiComplete.computeCMIandPValueBetterPartitioning();
-        }
-        else{
-            cmiComplete = new CMIComplete(numberOfPermutations, data, false);
-            cmiComplete.computeCMIandPValueParallel();
+
+        cmiComplete = new CMIComplete(numberOfPermutations, data, fjpool);
+
+        switch(method){
+            case "cupid": cmiComplete.computeAsCUPID();
+                break;
+            case "uniform": cmiComplete.computeUniformGrid(numberOfBins);
+                break;
+            case "pseudouniform": cmiComplete.computePseudoUniformGrid(numberOfBins);
+                break;
+            default: cmiComplete.computeIterativePartitioning();
         }
         result[0]=cmiComplete.cmi;
         result[1]=cmiComplete.pValue;

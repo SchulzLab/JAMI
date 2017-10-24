@@ -38,15 +38,20 @@ public class Main {
             " expression matrices are stored in rows. defaults to -1 if samples are stored in columns.",metaVar="INPUT")
     int numberOfSamples = -1;
 
+    @Option(name="-m", hidden = true, usage = "for using an alternative CMI method. One of cupid, uniform, pseudouniform.")
+    String method = "";
+
+    @Option(name="-bins", hidden = true, usage = "number of bins when using uniform or pseudouniform CMI computation.")
+    int numberOfBins = 0;
+
     @Option(name="-sep",usage="column separator in input data. defaults to the tab separator.",metaVar="INPUT")
     String separator = "\t";
 
     @Option(name="-perm",usage="number of permutations for inferring empirical p-values. defaults to 1000.",metaVar="OPTIONS")
     int numberOfPermutations = 1000;
 
-    @Option(name="-p",usage="parallel execution",metaVar="OPTIONS")
-    boolean parallel = false;
-
+    @Option(name="-t",usage="number of threads to use. -1 to use one less than the number of  available CPU cores",metaVar="OPTIONS")
+    int numberOfThreads = -1;
 
     /**
      * Uncomment one of the options
@@ -79,7 +84,8 @@ public class Main {
             }
 
             CompleteRun completeRun = new CompleteRun(genesMiRNA,fileGeneExpr,filemiRNAExpr,outputFile,
-                    numberOfPermutations,parallel,separator,!setFormat,numberOfSamples);
+                    numberOfPermutations,!setFormat, method, numberOfBins,
+                    numberOfThreads);
             completeRun.runComputation();
 
         } catch(Exception e){

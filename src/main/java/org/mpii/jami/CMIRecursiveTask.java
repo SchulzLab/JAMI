@@ -50,7 +50,7 @@ public class CMIRecursiveTask extends RecursiveTask<Integer> {
 
     private long processing(int permutations) {
         return(IntStream.range(1, permutations).mapToDouble(i -> computeRandomCMI())
-                .filter(randCMI -> randCMI <= cmi)
+                .filter(randCMI -> randCMI >= cmi)
                 .count());
     }
 
@@ -72,13 +72,12 @@ public class CMIRecursiveTask extends RecursiveTask<Integer> {
         sorted.add(ip.sortedIndices.get(0));
         sorted.add(ip.sortedIndices.get(1));
         sorted.add(randomizedSorted);
-        ArrayList<Integer[]> inverese = new ArrayList<>();
-        inverese.add(ip.inverseSortedIndices.get(0));
-        inverese.add(ip.inverseSortedIndices.get(1));
-        inverese.add(randomizedInverse);
-        IterativePartitioning ipRand = new IterativePartitioning(sorted, inverese);
+        ArrayList<Integer[]> inverse = new ArrayList<>();
+        inverse.add(ip.inverseSortedIndices.get(0));
+        inverse.add(ip.inverseSortedIndices.get(1));
+        inverse.add(randomizedInverse);
+        IterativePartitioning ipRand = new IterativePartitioning(sorted, inverse);
         ipRand.maxDeep = ip.maxDeep;
         return (ipRand.iterativePartitioningBetter());
     }
-
 }

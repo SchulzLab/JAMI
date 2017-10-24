@@ -1,5 +1,8 @@
 package org.mpii.jami;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import java.util.*;
 
 /**
@@ -12,6 +15,8 @@ import java.util.*;
  * Points are stored in CMI grid cells in form of their indices in the original input data structure.
  */
 public class IterativePartitioning {
+    private static final Logger logger = LogManager.getLogger("JAMI");
+
     ArrayList<double[]> data; //List of input data for cmi computation, currently works for dimension=3
     int pointsSize;  //number of data points
     int dimension;  //dimension of data, must be 3
@@ -276,7 +281,7 @@ public class IterativePartitioning {
             tst+=(size -expected)*(size -expected);
         }
         tst=dimCombinat*tst/ pointsNumber;
-       // System.out.println(tst);
+
         return (tst>magicNumbers[dimension-1]);
     }
 
@@ -387,11 +392,6 @@ public class IterativePartitioning {
                 }
                 newCubes.get(sum).addPoint(pointOrder);
             }
-
-//            for (Cube newCube : newCubes) {
-//                testCube(newCube);
-//            }
-
 
             if(useSplit(currentCube,newCubes)||currentCube.equals(initialCube)){
                 ArrayList<TreeNode> newNodes=new ArrayList<>();
@@ -520,15 +520,14 @@ public class IterativePartitioning {
      * @param cube
      */
     public void testCube(Cube cube){
-        boolean agree=true;
         int[][] coordinates = cube.getCoordinates();
         for (Integer point : cube.getPoints()) {
             for (int i = 0; i < dimension; i++) {
                 int currentCoordinate=inverseSortedIndices.get(i)[point];
                 if(currentCoordinate<coordinates[i][0]||currentCoordinate>coordinates[i][1]){
-                    System.out.println("error in point split");
-                    System.out.println("Point "+point+" "+i+"-th coordinate is "+currentCoordinate);
-                    System.out.println("but it has to be between "+coordinates[i][0]+", "+coordinates[i][1]);
+                    logger.debug("Error in point split: " +
+                    "Point "+point+" "+i+"-th coordinate is "+currentCoordinate +
+                            "but it has to be between "+coordinates[i][0]+", "+coordinates[i][1]);
                 }
             }
         }
