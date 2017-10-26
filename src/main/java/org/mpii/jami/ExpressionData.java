@@ -19,7 +19,7 @@ public class ExpressionData {
     private ArrayList<String> names; //Names stored at corresponding indices
     private ArrayList<double[]> expressionData; //expressionData.get(i) returns expression data corresponding to the i-th name
     private HashMap<String,Integer> nameToData; //Returns index corresponding to given name
-    private int numberOfSamples;
+    private int numberOfSamples = -1;
 
     public int getNumberOfSamples() {
         return numberOfSamples;
@@ -45,14 +45,21 @@ public class ExpressionData {
      * Reads the file and stores data
      * @param file name of the file
      */
-    void readFile(File file){
+    void readFile(File file, boolean hasHeader){
         try {
             int entryCount = 0;
-            CSVParser parser = CSVParser.parse(file, Charset.defaultCharset(), CSVFormat.TDF.withFirstRecordAsHeader());
-            this.numberOfSamples = parser.getHeaderMap().size();
+
+            CSVFormat format;
+            if(hasHeader) format = CSVFormat.TDF.withFirstRecordAsHeader();
+            else format = CSVFormat.TDF;
+
+            CSVParser parser = CSVParser.parse(file, Charset.defaultCharset(), format);
+
             for (CSVRecord record : parser)
             {
-                if(record.size()-1 != this.numberOfSamples){
+                if(this.numberOfSamples == -1)
+                    this.numberOfSamples = record.size() - 1;
+                if(record.size()-1 != this.numberOfSamples || this.numberOfSamples < 1){
                     throw new IOException(" record " + record.getRecordNumber() +
                             " has the wrong number of elements." );
                 }

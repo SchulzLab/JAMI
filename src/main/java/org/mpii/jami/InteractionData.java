@@ -1,5 +1,9 @@
 package org.mpii.jami;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.mpii.jami.model.Triplet;
+
 import java.io.*;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -12,6 +16,8 @@ import java.util.regex.Pattern;
  */
 public class InteractionData {
 
+    private static final Logger logger = LogManager.getLogger("JAMI");
+
     private HashSet<String> genes = new HashSet<>();
     private HashSet<String> miRNAs = new HashSet<>();
 
@@ -23,11 +29,11 @@ public class InteractionData {
         return miRNAs;
     }
 
-    public ArrayList<String[]> getTriplets() {
+    public ArrayList<Triplet> getTriplets() {
         return triplets;
     }
 
-    private ArrayList<String[]> triplets;
+    private ArrayList<Triplet> triplets = new ArrayList<>();
 
     public InteractionData(){
 
@@ -41,9 +47,8 @@ public class InteractionData {
      * @param skipFirst Skip first row
      * @return ArrayList with all triple from the file
      */
-    public void readTriples(File file, String separator, boolean skipFirst){
+    private void readTriples(File file, String separator, boolean skipFirst){
         Pattern pattern = Pattern.compile(separator);
-        ArrayList<String[]> result=new ArrayList<>();
         FileReader fr;
 
         try {
@@ -56,7 +61,10 @@ public class InteractionData {
             line=br.readLine();
             while (line!=null) {
                 String[] entries = pattern.split(line);
-                result.add(entries);
+                this.triplets.add(new Triplet(entries));
+                this.genes.add(entries[0]);
+                this.genes.add(entries[1]);
+                this.miRNAs.add(entries[2]);
                 line=br.readLine();
             }
             br.close();
@@ -66,8 +74,6 @@ public class InteractionData {
         } catch (IOException e) {
             e.printStackTrace();
         }
-
-        this.triplets = result;
     }
 
     /**
@@ -91,14 +97,18 @@ public class InteractionData {
             String line=br.readLine();
             while (line!=null) {
                 if(skipFirst){
-                    br.readLine();
+                    line = br.readLine();
                     skipFirst = false;
                     continue;
                 }
                 String[] entries = pattern.split(line);
 
-                if(entries.length!=2){  //maybe add possibility that there is no miRNA
-                    throw new IllegalArgumentException("Wrong line format in file "+file);
+                if(entries.length == 1){
+                    logger.debug("gene " + entries[0] + "has no miRNAs");
+                }
+                else if(entries.length!=2){  //maybe add possibility that there is no miRNA
+                    throw new IOException("At least one line in file "+file +
+                            " has more zero or more than two elements");
                 }
                 String geneName=entries[0];
                 String[] allMiRNA=patternMiRNA.split(entries[1]);
@@ -122,20 +132,18 @@ public class InteractionData {
      * of corresponding to genes.
      * miRExpr and geneExpr are initialized with list of gene and miRNA names found in the file.
      */
-    protected void readFileInSetFormat(File fileGenesMiRNA){
-        HashMap<String, String[]> genesToMiRNA = geneToMiRNA(fileGenesMiRNA, "\t", ",", false);
+    public void readFileInSetFormat(File fileGenesMiRNA){
+        HashMap<String, String[]> genesToMiRNA = geneToMiRNA(fileGenesMiRNA, "\t", ",", true);
 
         this.genes.addAll(genesToMiRNA.keySet());
-
-        for (String[] miRNANames : genesToMiRNA.values()) {
-            for (int i = 0; i < miRNANames.length; i++) {
-                miRNAs.add(miRNANames[i]);
-            }
-        }
+        ArrayList<String> genes_processed = new ArrayList<>();
 
         for(String geneA : genes) {
-            for (String geneB : genes) {
-                if (geneA == geneB) continue; //do not test same gene
+            genes_processed.add(geneA);
+            ArrayList<String> genes_to_test = new ArrayList<>(genes);
+            genes_to_test.removeAll(genes_processed);
+
+            for (String geneB : genes_to_test) {
 
                 HashSet<String> miRNAsA =
                         new HashSet<>(Arrays.asList(genesToMiRNA.get(geneA)));
@@ -144,9 +152,10 @@ public class InteractionData {
                         new HashSet<>(Arrays.asList(genesToMiRNA.get(geneB)));
 
                 miRNAsA.retainAll(miRNAsB); //miRNAsA contains only shared miRNAs
+                this.miRNAs.addAll(miRNAsA);
 
                 for (String miR : miRNAsA) {
-                    String[] triple = {geneA, geneB, miR};
+                    Triplet triple = new Triplet(geneA, geneB, miR);
                     this.triplets.add(triple);
                 }
             }
@@ -157,12 +166,7 @@ public class InteractionData {
      * Reads file with gene - miRNA interactions in the triple format. Initializes miRExpr and geneExpr with the
      * names of genes and miRNAs found in the file.
      */
-    protected void readFileWithTriples(File fileGenesMiRNA){
-        readTriples(fileGenesMiRNA, "\t", false);
-        for (String[] stringTriple : this.triplets) {
-            this.genes.add(stringTriple[0]);
-            this.genes.add(stringTriple[1]);
-            this.miRNAs.add(stringTriple[2]);
-        }
+    public void readFileWithTriples(File fileGenesMiRNA){
+        readTriples(fileGenesMiRNA, "\t", true);
     }
 }

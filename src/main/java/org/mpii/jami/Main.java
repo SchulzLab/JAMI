@@ -24,8 +24,8 @@ public class Main {
             "as opposed to defining individual triplets to be tested",metaVar="INPUT")
     boolean setFormat;
 
-    @Argument(index = 2,usage="file defining possible interactions between genes and miRNAs (set format) or " +
-            "triplets of gene-gene-miRNA (use with -t)",metaVar="INPUT")
+    @Argument(index = 2,usage="file defining possible interactions between genes and miRNAs (set format use -set) or " +
+            "triplets of gene-gene-miRNA",metaVar="INPUT")
     File genesMiRNA;
 
     @Argument(index = 1,usage="miRNA expression data",metaVar="INPUT")
@@ -34,24 +34,20 @@ public class Main {
     @Argument(index = 0,usage="gene expression data",metaVar="INPUT")
     File fileGeneExpr;
 
-    @Option(name="-n",usage="number of samples, only required if samples in" +
-            " expression matrices are stored in rows. defaults to -1 if samples are stored in columns.",metaVar="INPUT")
-    int numberOfSamples = -1;
-
-    @Option(name="-m", hidden = true, usage = "for using an alternative CMI method. One of cupid, uniform, pseudouniform.")
+    @Option(name="-method", hidden = true, usage = "for using an alternative CMI method. One of cupid, uniform, pseudouniform.")
     String method = "";
 
     @Option(name="-bins", hidden = true, usage = "number of bins when using uniform or pseudouniform CMI computation.")
     int numberOfBins = 0;
 
-    @Option(name="-sep",usage="column separator in input data. defaults to the tab separator.",metaVar="INPUT")
-    String separator = "\t";
-
     @Option(name="-perm",usage="number of permutations for inferring empirical p-values. defaults to 1000.",metaVar="OPTIONS")
     int numberOfPermutations = 1000;
 
-    @Option(name="-t",usage="number of threads to use. -1 to use one less than the number of  available CPU cores",metaVar="OPTIONS")
+    @Option(name="-threads",usage="number of threads to use. -1 to use one less than the number of  available CPU cores",metaVar="OPTIONS")
     int numberOfThreads = -1;
+
+    @Option(name="-noheader",usage="set this option if the input expression files have no headers",metaVar="OPTIONS")
+    boolean noheader = false;
 
     /**
      * Uncomment one of the options
@@ -85,7 +81,7 @@ public class Main {
 
             CompleteRun completeRun = new CompleteRun(genesMiRNA,fileGeneExpr,filemiRNAExpr,outputFile,
                     numberOfPermutations,!setFormat, method, numberOfBins,
-                    numberOfThreads);
+                    numberOfThreads, !noheader);
             completeRun.runComputation();
 
         } catch(Exception e){
