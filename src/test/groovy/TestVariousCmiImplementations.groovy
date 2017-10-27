@@ -26,7 +26,7 @@ class TestVariousCmiImplementations extends Specification {
         when:
         CompleteRun completeRun = new CompleteRun(genesMiRNA,fileGeneExpr,filemiRNAExpr,
                 outputFileName,numberOfPermutations,tripleFormat,
-                "uniform", 3, -1, true);
+                "uniform", 3, -1, true, 1);
         completeRun.runComputation();
 
         then:
@@ -46,7 +46,7 @@ class TestVariousCmiImplementations extends Specification {
         when:
         CompleteRun completeRun = new CompleteRun(genesMiRNA,fileGeneExpr,filemiRNAExpr,
                 outputFileName,numberOfPermutations,tripleFormat,
-                "pseudouniform", 3, -1, true);
+                "pseudouniform", 3, -1, true, 1);
         completeRun.runComputation();
 
         then:
@@ -66,7 +66,7 @@ class TestVariousCmiImplementations extends Specification {
         when:
         CompleteRun completeRun = new CompleteRun(genesMiRNA,fileGeneExpr,filemiRNAExpr,
                 outputFileName,numberOfPermutations,tripleFormat,
-                "cupid", 0, -1, true);
+                "cupid", 0, -1, true, 1);
         completeRun.runComputation();
 
         then:
@@ -86,7 +86,7 @@ class TestVariousCmiImplementations extends Specification {
         when:
         CompleteRun completeRun = new CompleteRun(genesMiRNA,fileGeneExpr,filemiRNAExpr,
                 outputFileName,numberOfPermutations,tripleFormat,
-                "", 0, -1, true);
+                "", 0, -1, true, 1);
         completeRun.runComputation();
 
         then:
@@ -107,7 +107,7 @@ class TestVariousCmiImplementations extends Specification {
         when:
         CompleteRun completeRun = new CompleteRun(genesMiRNA,fileGeneExpr,filemiRNAExpr,
                 outputFileName,numberOfPermutations,tripleFormat,
-                "", 0, -1, true);
+                "", 0, -1, true, 1);
         completeRun.runComputation();
 
         then:

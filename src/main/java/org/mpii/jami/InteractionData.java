@@ -169,4 +169,16 @@ public class InteractionData {
     public void readFileWithTriples(File fileGenesMiRNA){
         readTriples(fileGenesMiRNA, "\t", true);
     }
+
+    public void filterByGene(String selectedGene) {
+        ArrayList<Triplet> retainedTriplets = new ArrayList<>();
+        for(Triplet triplet : triplets){
+            if(triplet.getGeneOne().equals(selectedGene))
+                retainedTriplets.add(triplet);
+            if(triplet.getGeneTwo().equals(selectedGene)){
+                retainedTriplets.add(new Triplet(triplet.getGeneTwo(), triplet.getGeneOne(), triplet.getMiRNA()));
+            }
+        }
+        this.triplets = retainedTriplets;
+    }
 }

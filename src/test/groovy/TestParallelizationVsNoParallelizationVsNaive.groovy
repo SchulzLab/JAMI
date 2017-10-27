@@ -22,7 +22,7 @@ class TestParallelizationVsNoParallelizationVsNaive extends Specification {
         when:
         CompleteRun completeRun = new CompleteRun(genesMiRNA,fileGeneExpr,filemiRNAExpr,
                 outputFileName,numberOfPermutations,tripleFormat,
-                "", 0, 1, true);
+                "", 0, 1, true, 1);
         completeRun.runComputation();
 
         then:
@@ -37,7 +37,7 @@ class TestParallelizationVsNoParallelizationVsNaive extends Specification {
         when:
         CompleteRun completeRun = new CompleteRun(genesMiRNA,fileGeneExpr,filemiRNAExpr,
                 outputFileName,numberOfPermutations,tripleFormat,
-                "", 0, 2, true);
+                "", 0, 2, true, 1);
         completeRun.runComputation();
 
         then:
@@ -51,7 +51,7 @@ class TestParallelizationVsNoParallelizationVsNaive extends Specification {
 
         when:
         CompleteRun completeRun = new CompleteRun(genesMiRNA,fileGeneExpr,filemiRNAExpr,
-                outputFileName,numberOfPermutations,tripleFormat, true);
+                outputFileName,numberOfPermutations,tripleFormat, true, 1);
         completeRun.runComputation();
 
         then:
@@ -66,7 +66,7 @@ class TestParallelizationVsNoParallelizationVsNaive extends Specification {
         when:
         CompleteRun completeRun = new CompleteRun(genesMiRNA,fileGeneExpr,filemiRNAExpr,
                 outputFileName,numberOfPermutations,tripleFormat,
-                "cupid",0,1, true);
+                "cupid",0,1, true, 1);
         completeRun.runComputation();
 
         then:

@@ -49,6 +49,9 @@ public class Main {
     @Option(name="-noheader",usage="set this option if the input expression files have no headers",metaVar="OPTIONS")
     boolean noheader = false;
 
+    @Option(name="-pcut",usage="optional p-value cutoff")
+    double pValueCutoff = 1;
+
     /**
      * Uncomment one of the options
      * @param args
@@ -79,9 +82,13 @@ public class Main {
                 throw new IOException("ERROR: no gene expression file provided");
             }
 
+            if(pValueCutoff <= 0 | pValueCutoff >= 1){
+                throw new IllegalArgumentException("p-value cutoff -pcut has to be between 0 and 1.");
+            }
+
             CompleteRun completeRun = new CompleteRun(genesMiRNA,fileGeneExpr,filemiRNAExpr,outputFile,
                     numberOfPermutations,!setFormat, method, numberOfBins,
-                    numberOfThreads, !noheader);
+                    numberOfThreads, !noheader, pValueCutoff);
             completeRun.runComputation();
 
         } catch(Exception e){

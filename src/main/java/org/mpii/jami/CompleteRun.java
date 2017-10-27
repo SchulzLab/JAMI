@@ -30,13 +30,15 @@ public class CompleteRun{
     private int numberOfBins = 0;
     private int numberOfThreads = -1;
     private boolean header;
+    private double pValueCutoff = 1;
     private HashMap<Triplet, Double> cmis = new HashMap<>();
     private HashMap<Triplet, Double> pvalues = new HashMap<>();
+    private String selectedGene;
 
     public CompleteRun(File fileGenesMiRNA,File fileGeneExpr,File filemiRExpr,File outputFile,
                        int numberOfPermutations,boolean tripleFormat,
                        String method, int numberOfBins, int numberOfThreads,
-                       boolean header){
+                       boolean header, double pValueCutoff){
         this.tripletsWrittenToDisk = 0;
         this.completed = false;
         this.header = header;
@@ -49,6 +51,7 @@ public class CompleteRun{
         this.tripleFormat=tripleFormat;
         this.numberOfThreads=numberOfThreads;
         this.numberOfPermutations=numberOfPermutations;
+        this.pValueCutoff = pValueCutoff;
     }
 
     public CompleteRun(File fileGenesMiRNA,File fileGeneExpr,File filemiRExpr,File outputFile,
@@ -73,6 +76,14 @@ public class CompleteRun{
         return pvalues;
     }
 
+    public String getSelectedGene() {
+        return selectedGene;
+    }
+
+    public void filterForGene(String selectedGene) {
+        this.selectedGene = selectedGene;
+    }
+
     /**
      * Reads the files and performs all CMI computations.
      */
@@ -93,6 +104,10 @@ public class CompleteRun{
             logger.debug("Reading CMI candidate file in set format.");
 
             interactions.readFileInSetFormat(this.fileGenesMiRNA);
+        }
+
+        if(this.selectedGene != null){
+            interactions.filterByGene(selectedGene);
         }
 
         //read only gene and miRNA expression data we actually need
@@ -123,7 +138,7 @@ public class CompleteRun{
         try {
             fw = new FileWriter(outputFile);
             bw = new BufferedWriter(fw);
-            bw.write("Modulator");
+            bw.write("Source");
             bw.write(separator);
             bw.write("Target");
             bw.write(separator);
@@ -135,7 +150,6 @@ public class CompleteRun{
 
             for (Triplet t : interactions.getTriplets()) {
                 computeCMIAndStore(t, fjpool);
-                this.tripletsWrittenToDisk+=2;
             }
 
             bw.close();
@@ -187,21 +201,28 @@ public class CompleteRun{
         double[] miRNAData=miRExpr.getExpressionData().get(miRNAIndex);
 
         try {
-            bw.write(gene1Name + separator + gene2Name + separator + miRNAName + separator);
             double[] result = computeTriple(gene1Data, gene2Data, miRNAData, fjpool);
-            bw.write(result[0] + separator + result[1] + "\n");
-            bw.flush();
+            if(result[1] < pValueCutoff) {
+                bw.write(gene1Name + separator + gene2Name + separator + miRNAName + separator);
+                bw.write(result[0] + separator + result[1] + "\n");
+                bw.flush();
 
-            this.cmis.put(t, result[0]);
-            this.pvalues.put(t, result[1]);
+                this.cmis.put(t, result[0]);
+                this.pvalues.put(t, result[1]);
+                this.tripletsWrittenToDisk++;
+            }
+            if(selectedGene == null) { //consider both genes as regulators unless a regulator gene was selected.
+                result = computeTriple(gene2Data, gene1Data, miRNAData, fjpool);
+                if (result[1] < pValueCutoff) {
+                    bw.write(gene2Name + separator + gene1Name + separator + miRNAName + separator);
+                    bw.write(result[0] + separator + result[1] + "\n");
+                    bw.flush();
 
-            bw.write(gene2Name + separator + gene1Name + separator + miRNAName + separator);
-            result = computeTriple(gene2Data, gene1Data, miRNAData, fjpool);
-            bw.write(result[0] + separator + result[1] + "\n");
-            bw.flush();
-
-            this.cmis.put(new Triplet(gene2Name, gene1Name, miRNAName), result[0]);
-            this.pvalues.put(new Triplet(gene2Name, gene1Name, miRNAName), result[1]);
+                    this.cmis.put(new Triplet(gene2Name, gene1Name, miRNAName), result[0]);
+                    this.pvalues.put(new Triplet(gene2Name, gene1Name, miRNAName), result[1]);
+                    this.tripletsWrittenToDisk++;
+                }
+            }
 
         } catch (IOException e) {
             e.printStackTrace();
