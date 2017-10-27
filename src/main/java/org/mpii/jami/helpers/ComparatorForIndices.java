@@ -1,4 +1,4 @@
-package org.mpii.jami;
+package org.mpii.jami.helpers;
 
 import java.util.Arrays;
 import java.util.Comparator;

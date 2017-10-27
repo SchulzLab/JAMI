@@ -1,10 +1,12 @@
+package org.mpii.jami.test
+
 import org.mpii.jami.CompleteRun
 import spock.lang.Specification
 
 /**
  * Created by mlist on 10/26/17.
  */
-class TestSelectGene extends Specification {
+class TestPValueCutoff extends Specification {
 
     def genesMiRNA = new File("data/10_genes_mirna_interactions_triplet_format.txt")
     def fileGeneExpr = new File("data/10_genes_gene_expr.txt")
@@ -13,21 +15,19 @@ class TestSelectGene extends Specification {
 
     def test_dir = new File("out/test").mkdir()
 
-    def "test select gene"()
+    def "test p-value cutoff"()
     {
         given:
-        def tripleFormat = true
         def outputFileName = new File("out/test/test_p_value_cutoff.csv")
 
         when:
-        CompleteRun completeRun = new CompleteRun(genesMiRNA,fileGeneExpr,filemiRNAExpr,
-                outputFileName,numberOfPermutations,tripleFormat,
-                "", 0, -1, true,1);
-        completeRun.filterForGene("ENSG00000110427");
+        CompleteRun completeRun = new CompleteRun(genesMiRNA,fileGeneExpr,filemiRNAExpr, outputFileName)
+        completeRun.numberOfPermutations = numberOfPermutations
+        completeRun.pValueCutoff = 0.05
         completeRun.runComputation();
 
         then:
         completeRun.completed == true
-        completeRun.tripletsWrittenToDisk == 40
+        completeRun.tripletsWrittenToDisk < 100
     }
 }

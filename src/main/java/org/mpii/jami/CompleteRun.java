@@ -2,6 +2,9 @@ package org.mpii.jami;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.mpii.jami.helpers.SettingsManager;
+import org.mpii.jami.input.ExpressionData;
+import org.mpii.jami.input.InteractionData;
 import org.mpii.jami.model.Triplet;
 
 import java.io.*;
@@ -35,37 +38,25 @@ public class CompleteRun{
     private HashMap<Triplet, Double> pvalues = new HashMap<>();
     private String selectedGene;
 
-    public CompleteRun(File fileGenesMiRNA,File fileGeneExpr,File filemiRExpr,File outputFile,
-                       int numberOfPermutations,boolean tripleFormat,
-                       String method, int numberOfBins, int numberOfThreads,
-                       boolean header, double pValueCutoff){
+    public CompleteRun(File fileGenesMiRNA, File fileGeneExpr, File filemiRExpr, File outputFile,
+                       SettingsManager settingsManager){
         this.tripletsWrittenToDisk = 0;
         this.completed = false;
-        this.header = header;
-        this.method = method;
-        this.numberOfBins = numberOfBins;
-        this.outputFile=outputFile;
-        this.fileGenesMiRNA=fileGenesMiRNA;
-        this.fileGeneExpr=fileGeneExpr;
-        this.filemiRExpr=filemiRExpr;
-        this.tripleFormat=tripleFormat;
-        this.numberOfThreads=numberOfThreads;
-        this.numberOfPermutations=numberOfPermutations;
-        this.pValueCutoff = pValueCutoff;
+        this.header = (boolean) settingsManager.get("header");
+        this.method = (String) settingsManager.get("method");
+        this.numberOfBins = (int) settingsManager.get("numberOfBins");
+        this.outputFile = outputFile;
+        this.fileGenesMiRNA = fileGenesMiRNA;
+        this.fileGeneExpr = fileGeneExpr;
+        this.filemiRExpr = filemiRExpr;
+        this.tripleFormat = (boolean) settingsManager.get("tripleFormat");
+        this.numberOfThreads = (int) settingsManager.get("numberOfThreads");
+        this.numberOfPermutations = (int) settingsManager.get("numberOfPermutations");
+        this.pValueCutoff = (double) settingsManager.get("pValueCutoff");
     }
 
-    public CompleteRun(File fileGenesMiRNA,File fileGeneExpr,File filemiRExpr,File outputFile,
-                       int numberOfPermutations,boolean tripleFormat,
-                       boolean header){
-        this.tripletsWrittenToDisk = 0;
-        this.completed = false;
-        this.outputFile=outputFile;
-        this.fileGenesMiRNA=fileGenesMiRNA;
-        this.fileGeneExpr=fileGeneExpr;
-        this.filemiRExpr=filemiRExpr;
-        this.tripleFormat=tripleFormat;
-        this.numberOfPermutations=numberOfPermutations;
-        this.header = header;
+    public CompleteRun(File fileGenesMiRNA,File fileGeneExpr,File filemiRExpr,File outputFile){
+        this(fileGenesMiRNA, fileGeneExpr, filemiRExpr, outputFile, new SettingsManager());
     }
 
     public HashMap<Triplet, Double> getCmis() {
@@ -202,7 +193,7 @@ public class CompleteRun{
 
         try {
             double[] result = computeTriple(gene1Data, gene2Data, miRNAData, fjpool);
-            if(result[1] < pValueCutoff) {
+            if(result[1] <= pValueCutoff) {
                 bw.write(gene1Name + separator + gene2Name + separator + miRNAName + separator);
                 bw.write(result[0] + separator + result[1] + "\n");
                 bw.flush();
@@ -213,7 +204,7 @@ public class CompleteRun{
             }
             if(selectedGene == null) { //consider both genes as regulators unless a regulator gene was selected.
                 result = computeTriple(gene2Data, gene1Data, miRNAData, fjpool);
-                if (result[1] < pValueCutoff) {
+                if (result[1] <= pValueCutoff) {
                     bw.write(gene2Name + separator + gene1Name + separator + miRNAName + separator);
                     bw.write(result[0] + separator + result[1] + "\n");
                     bw.flush();

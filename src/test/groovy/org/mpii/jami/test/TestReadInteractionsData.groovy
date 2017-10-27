@@ -1,5 +1,6 @@
-import org.mpii.jami.ExpressionData
-import org.mpii.jami.InteractionData
+package org.mpii.jami.test
+
+import org.mpii.jami.input.InteractionData
 import spock.lang.Specification
 
 

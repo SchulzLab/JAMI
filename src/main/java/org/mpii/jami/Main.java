@@ -6,9 +6,11 @@ import org.apache.logging.log4j.Logger;
 import org.kohsuke.args4j.Argument;
 import org.kohsuke.args4j.CmdLineParser;
 import org.kohsuke.args4j.Option;
+import org.mpii.jami.helpers.SettingsManager;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.HashMap;
 
 /**
  * Created by fuksova on 10/7/15.
@@ -86,9 +88,17 @@ public class Main {
                 throw new IllegalArgumentException("p-value cutoff -pcut has to be between 0 and 1.");
             }
 
-            CompleteRun completeRun = new CompleteRun(genesMiRNA,fileGeneExpr,filemiRNAExpr,outputFile,
-                    numberOfPermutations,!setFormat, method, numberOfBins,
-                    numberOfThreads, !noheader, pValueCutoff);
+            HashMap<String, Object> settings = new HashMap<>();
+            settings.put("header", !noheader);
+            settings.put("method", method);
+            settings.put("numberOfBins", numberOfBins);
+            settings.put("tripleFormat", !setFormat);
+            settings.put("numberOfThreads", numberOfThreads);
+            settings.put("numberOfPermutations", numberOfPermutations);
+            settings.put("pValueCutoff", pValueCutoff);
+            SettingsManager settingsManager = new SettingsManager(settings);
+
+            CompleteRun completeRun = new CompleteRun(genesMiRNA,fileGeneExpr,filemiRNAExpr,outputFile, settingsManager);
             completeRun.runComputation();
 
         } catch(Exception e){

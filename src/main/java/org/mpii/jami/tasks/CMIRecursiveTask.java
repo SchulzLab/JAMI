@@ -1,4 +1,6 @@
-package org.mpii.jami;
+package org.mpii.jami.tasks;
+
+import org.mpii.jami.cmi.IterativePartitioning;
 
 import java.util.*;
 import java.util.concurrent.ForkJoinTask;
@@ -63,21 +65,21 @@ public class CMIRecursiveTask extends RecursiveTask<Integer> {
         Integer[] randomizedInverse = new Integer[numOfSamples];
 
         for (int j = 0; j < numOfSamples; j++) {
-            Integer value = ip.inverseSortedIndices.get(2)[currentPermutation.get(j)];
+            Integer value = ip.getInverseSortedIndices().get(2)[currentPermutation.get(j)];
             randomizedInverse[j] = value;
             randomizedSorted[value] = j;
         }
 
         ArrayList<Integer[]> sorted = new ArrayList<>();
-        sorted.add(ip.sortedIndices.get(0));
-        sorted.add(ip.sortedIndices.get(1));
+        sorted.add(ip.getSortedIndices().get(0));
+        sorted.add(ip.getSortedIndices().get(1));
         sorted.add(randomizedSorted);
         ArrayList<Integer[]> inverse = new ArrayList<>();
-        inverse.add(ip.inverseSortedIndices.get(0));
-        inverse.add(ip.inverseSortedIndices.get(1));
+        inverse.add(ip.getInverseSortedIndices().get(0));
+        inverse.add(ip.getInverseSortedIndices().get(1));
         inverse.add(randomizedInverse);
         IterativePartitioning ipRand = new IterativePartitioning(sorted, inverse);
-        ipRand.maxDeep = ip.maxDeep;
+        ipRand.setMaxDeep(ip.getMaxDeep());
         return (ipRand.iterativePartitioningBetter());
     }
 }

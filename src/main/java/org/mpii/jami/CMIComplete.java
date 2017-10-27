@@ -1,5 +1,10 @@
 package org.mpii.jami;
 
+import org.mpii.jami.cmi.CMIUniform;
+import org.mpii.jami.cmi.IterativePartitioning;
+import org.mpii.jami.tasks.CMIRecursiveTask;
+import org.mpii.jami.tasks.CMIUniformGridRecursiveTask;
+
 import java.util.*;
 import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.RecursiveTask;
@@ -72,14 +77,13 @@ public class CMIComplete{
             randCMI[i]=ipRand.naivePartitioning();
 
         }
-        double sum=0;
-        for (int i = 0; i < numPerm; i++) {
-            if(cmi<= randCMI[i]){
-                sum=sum+1.0;
-            }
+        int sum=0;
+        for (int i = 0; i < numPerm; i++)
+        {
+            if(cmi<= randCMI[i]) sum++;
         }
-        sum=Math.max(sum,1.0);
-        pValue=sum/numPerm;
+        sum=Math.max(sum,1);
+        pValue= (double) sum/numPerm;
 
     }
 
@@ -92,7 +96,7 @@ public class CMIComplete{
      */
     public void computeIterativePartitioning(){
         IterativePartitioning ip=new IterativePartitioning(origData);
-        ip.maxDeep=maxDeep;
+        ip.setMaxDeep(maxDeep);
         cmi=ip.iterativePartitioningBetter();
 
         RecursiveTask<Integer> task = new CMIRecursiveTask(numPerm, cmi, ip, origData.get(2).length);

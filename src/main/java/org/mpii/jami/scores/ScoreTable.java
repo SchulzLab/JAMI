@@ -1,4 +1,4 @@
-package org.mpii.jami;
+package org.mpii.jami.scores;
 
 import java.util.ArrayList;
 import java.util.HashMap;

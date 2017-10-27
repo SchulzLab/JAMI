@@ -1,4 +1,6 @@
-package org.mpii.jami;
+package org.mpii.jami.tasks;
+
+import org.mpii.jami.cmi.CMIUniform;
 
 import java.util.ArrayList;
 import java.util.Collection;

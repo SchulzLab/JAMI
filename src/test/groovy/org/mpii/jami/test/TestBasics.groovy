@@ -1,3 +1,5 @@
+package org.mpii.jami.test
+
 import org.mpii.jami.CompleteRun
 import org.mpii.jami.model.Triplet
 import spock.lang.Specification
@@ -11,17 +13,16 @@ class TestBasics extends Specification {
     def genesMiRNA = new File("data/single_gene_pair_triplets.txt")
     def fileGeneExpr = new File("data/single_gene_pair_gene_expr.txt")
     def filemiRNAExpr = new File("data/single_gene_pair_mir_expr.txt")
-    def numberOfPermutations = 1000
 
     def "test one gene pair"()
     {
         given:
-        def tripleFormat = true
         def outputFileName = new File("out/test/test_basics.txt")
 
         when:
         CompleteRun completeRun = new CompleteRun(genesMiRNA,fileGeneExpr,filemiRNAExpr,
-                outputFileName,numberOfPermutations,tripleFormat, false);
+                outputFileName);
+
         completeRun.runComputation();
 
         then:

@@ -1,4 +1,6 @@
-import org.mpii.jami.ExpressionData
+package org.mpii.jami.test
+
+import org.mpii.jami.input.ExpressionData
 import spock.lang.Specification
 
 

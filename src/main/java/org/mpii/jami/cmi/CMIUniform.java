@@ -1,7 +1,6 @@
-package org.mpii.jami;
+package org.mpii.jami.cmi;
 
 import java.util.ArrayList;
-import java.util.LinkedList;
 
 /**
  * Created by fuksova on 1/21/16.

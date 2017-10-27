@@ -1,8 +1,8 @@
-package org.mpii.jami;
+package org.mpii.jami.scores;
+
+import org.mpii.jami.cmi.PseudoContingencyTable;
 
 import java.io.*;
-import java.lang.reflect.Array;
-import java.text.DecimalFormat;
 import java.util.*;
 import java.util.regex.Pattern;
 
@@ -38,6 +38,19 @@ public class ScoreStructure {
     public static int valueInd;  //Index of column containing score values
     private ArrayList<String> intToGeneName; //Mapping of integers to corresponding gene names (for identifying a suitable row index in scoreMatrix)
     private ArrayList<String> intTomiRNAName; //Mapping of integers to corresponding miRNA names (for identifying a suitable column index in scoreMatrix)
+
+    public HashMap<String, Integer> getGeneNameToInt() {
+        return geneNameToInt;
+    }
+
+    public HashMap<String, Integer> getMiRNANameToInt() {
+        return miRNANameToInt;
+    }
+
+    public SparseScoreMatrix getScoreMatrix() {
+        return scoreMatrix;
+    }
+
     HashMap<String,Integer> geneNameToInt; //Opposite map to intToGeneName
     HashMap<String,Integer> miRNANameToInt; //Opposite map to intTomiRNAName
     SparseScoreMatrix scoreMatrix; //Matrix with Cupid step 2 score. Rows are genes, columns are miRNAs. The above maps are used for identifying indices for corresponding names

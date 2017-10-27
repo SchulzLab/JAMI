@@ -1,4 +1,4 @@
-package org.mpii.jami;
+package org.mpii.jami.cmi;
 
 import org.apache.commons.math3.special.Beta;
 

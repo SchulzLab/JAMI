@@ -1,4 +1,4 @@
-package org.mpii.jami;
+package org.mpii.jami.input;
 
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
@@ -45,7 +45,7 @@ public class ExpressionData {
      * Reads the file and stores data
      * @param file name of the file
      */
-    void readFile(File file, boolean hasHeader){
+    public void readFile(File file, boolean hasHeader){
         try {
             int entryCount = 0;
 

@@ -1,3 +1,5 @@
+package org.mpii.jami.test
+
 import org.mpii.jami.CompleteRun
 import spock.lang.Specification
 
@@ -10,8 +12,6 @@ class TestParallelizationVsNoParallelizationVsNaive extends Specification {
     def genesMiRNA = new File("data/10_genes_mirna_interactions_triplet_format.txt")
     def fileGeneExpr = new File("data/10_genes_gene_expr.txt")
     def filemiRNAExpr = new File("data/10_genes_mir_expr.txt")
-    def numberOfPermutations = 1000
-    def tripleFormat = true
 
     def test_dir = new File("out/test").mkdir()
 
@@ -20,9 +20,8 @@ class TestParallelizationVsNoParallelizationVsNaive extends Specification {
         def outputFileName = new File("out/test/test_triplets_1_core.csv")
 
         when:
-        CompleteRun completeRun = new CompleteRun(genesMiRNA,fileGeneExpr,filemiRNAExpr,
-                outputFileName,numberOfPermutations,tripleFormat,
-                "", 0, 1, true, 1);
+        CompleteRun completeRun = new CompleteRun(genesMiRNA,fileGeneExpr,filemiRNAExpr, outputFileName)
+        completeRun.numberOfThreads = 1;
         completeRun.runComputation();
 
         then:
@@ -35,9 +34,8 @@ class TestParallelizationVsNoParallelizationVsNaive extends Specification {
         def outputFileName = new File("out/test/test_triplets_2_cores.csv")
 
         when:
-        CompleteRun completeRun = new CompleteRun(genesMiRNA,fileGeneExpr,filemiRNAExpr,
-                outputFileName,numberOfPermutations,tripleFormat,
-                "", 0, 2, true, 1);
+        CompleteRun completeRun = new CompleteRun(genesMiRNA,fileGeneExpr,filemiRNAExpr, outputFileName);
+        completeRun.numberOfThreads = 2;
         completeRun.runComputation();
 
         then:
@@ -50,8 +48,7 @@ class TestParallelizationVsNoParallelizationVsNaive extends Specification {
         def outputFileName = new File("out/test/test_triplets_max_cores.csv")
 
         when:
-        CompleteRun completeRun = new CompleteRun(genesMiRNA,fileGeneExpr,filemiRNAExpr,
-                outputFileName,numberOfPermutations,tripleFormat, true, 1);
+        CompleteRun completeRun = new CompleteRun(genesMiRNA,fileGeneExpr,filemiRNAExpr, outputFileName);
         completeRun.runComputation();
 
         then:
@@ -64,9 +61,8 @@ class TestParallelizationVsNoParallelizationVsNaive extends Specification {
         def outputFileName = new File("out/test/test_triplets_cupid.csv")
 
         when:
-        CompleteRun completeRun = new CompleteRun(genesMiRNA,fileGeneExpr,filemiRNAExpr,
-                outputFileName,numberOfPermutations,tripleFormat,
-                "cupid",0,1, true, 1);
+        CompleteRun completeRun = new CompleteRun(genesMiRNA,fileGeneExpr,filemiRNAExpr, outputFileName);
+        completeRun.method = "cupid";
         completeRun.runComputation();
 
         then:

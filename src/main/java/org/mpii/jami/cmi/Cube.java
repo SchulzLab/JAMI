@@ -1,4 +1,4 @@
-package org.mpii.jami;
+package org.mpii.jami.cmi;
 
 import java.util.ArrayList;
 import java.util.Collection;

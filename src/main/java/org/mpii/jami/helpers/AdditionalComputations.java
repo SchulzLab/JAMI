@@ -1,4 +1,4 @@
-package org.mpii.jami;
+package org.mpii.jami.helpers;
 
 /**
  * Created by fuksova on 1/22/16.

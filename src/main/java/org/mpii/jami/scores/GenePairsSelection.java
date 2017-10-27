@@ -1,4 +1,4 @@
-package org.mpii.jami;
+package org.mpii.jami.scores;
 
 import java.io.BufferedReader;
 import java.io.FileNotFoundException;

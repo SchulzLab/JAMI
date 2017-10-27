@@ -1,7 +1,8 @@
-package org.mpii.jami;
+package org.mpii.jami.cmi;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.mpii.jami.helpers.ComparatorForIndices;
 
 import java.util.*;
 
@@ -17,21 +18,36 @@ import java.util.*;
 public class IterativePartitioning {
     private static final Logger logger = LogManager.getLogger("JAMI");
 
-    ArrayList<double[]> data; //List of input data for cmi computation, currently works for dimension=3
-    int pointsSize;  //number of data points
-    int dimension;  //dimension of data, must be 3
-    int dimCombinat; //2^dimension
-    double [] magicNumbers; //Magic number used in the original implementation claimed to be chi2 statistics but they are not
-    ArrayList<Integer[]> inverseSortedIndices;  //Instead of double values of points their order in every dimension is used for CMI computation
-    ArrayList<Integer[]> sortedIndices;  //indices of points sorted according to their original double value
+    private ArrayList<double[]> data; //List of input data for cmi computation, currently works for dimension=3
+    private int pointsSize;  //number of data points
+    private int dimension;  //dimension of data, must be 3
+    private int dimCombinat; //2^dimension
+    private double [] magicNumbers; //Magic number used in the original implementation claimed to be chi2 statistics but they are not
+
+    public ArrayList<Integer[]> getInverseSortedIndices() {
+        return inverseSortedIndices;
+    }
+
+    public ArrayList<Integer[]> getSortedIndices() {
+        return sortedIndices;
+    }
+
+    private ArrayList<Integer[]> inverseSortedIndices;  //Instead of double values of points their order in every dimension is used for CMI computation
+    private ArrayList<Integer[]> sortedIndices;  //indices of points sorted according to their original double value
                         //Usually, only third array from this structure is used.
-    int [][] combArray;  //in original code called Imm. This array helps to assign correct bound to new cubes
+    private int [][] combArray;  //in original code called Imm. This array helps to assign correct bound to new cubes
 
-    LinkedList<Cube> usedCubes;  //list of cubes that were used for CMI computation
-    public int maxDeep; //Maximal deep of splitting space into cubes
-    TreeNode treeRoot;
+    private LinkedList<Cube> usedCubes;  //list of cubes that were used for CMI computation
+    private int maxDeep; //Maximal deep of splitting space into cubes
 
 
+    public int getMaxDeep() {
+        return maxDeep;
+    }
+
+    public void setMaxDeep(int maxDeep) {
+        this.maxDeep = maxDeep;
+    }
     /**
      *
      * @param inputData input data
@@ -77,7 +93,6 @@ public class IterativePartitioning {
         maxDeep=Integer.MAX_VALUE;
         initCombArray();
     }
-
 
     /**
      * Basic constructor that initializes all necessary structures based on double valued data
@@ -372,7 +387,6 @@ public class IterativePartitioning {
         TreeNode rootNode=new TreeNode(initialCube);
         stack2.push(rootNode);
         stack.push(initialCube);
-        treeRoot=rootNode;
 
         double cmi=0;
         while (!stack.isEmpty()) {
@@ -399,7 +413,6 @@ public class IterativePartitioning {
                     TreeNode tn=new TreeNode(newCubes.get(i));
                     newNodes.add(tn);
                 }
-                //TreeNode currentNode=stack2.pop();
                 currentNode.reinit(center,newNodes);
                 for (int i = 0; i < dimCombinat; i++) {
 
@@ -419,7 +432,6 @@ public class IterativePartitioning {
                 }
             }
             else{
-                //cmi+=cmiInCube(currentCube);
                 cmi+=cmiInCubeBetter(currentCube);
                 usedCubes.add(currentCube);
             }
@@ -446,7 +458,7 @@ public class IterativePartitioning {
         int nz=coordinates[2][1]-coordinates[2][0]+1;
         int nxz=0;
         int nyz=0;
-        double cmi=0;
+        double cmi;
         for (int i = 0; i < pointsSize; i++) {
             int x=inverseSortedIndices.get(0)[i];
             int y=inverseSortedIndices.get(1)[i];
