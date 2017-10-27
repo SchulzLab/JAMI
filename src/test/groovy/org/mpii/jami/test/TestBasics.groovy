@@ -20,9 +20,8 @@ class TestBasics extends Specification {
         def outputFileName = new File("out/test/test_basics.txt")
 
         when:
-        CompleteRun completeRun = new CompleteRun(genesMiRNA,fileGeneExpr,filemiRNAExpr,
-                outputFileName);
-
+        CompleteRun completeRun = new CompleteRun(genesMiRNA,fileGeneExpr,filemiRNAExpr, outputFileName);
+        completeRun.header = false;
         completeRun.runComputation();
 
         then:
