@@ -2,6 +2,7 @@ package org.mpii.jami;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.mpii.jami.helpers.Progressbar;
 import org.mpii.jami.helpers.SettingsManager;
 import org.mpii.jami.input.ExpressionData;
 import org.mpii.jami.input.InteractionData;
@@ -139,8 +140,18 @@ public class CompleteRun{
             bw.write(separator);
             bw.write("p-value\n");
 
+            int numberOfTriplets = interactions.getTriplets().size();
+            int currentTriplet = 1;
+            double progress = 0.0;
+
             for (Triplet t : interactions.getTriplets()) {
                 computeCMIAndStore(t, fjpool);
+                double newProgress = (double) currentTriplet++ / numberOfTriplets;
+
+                if((newProgress - progress) > 0.01){
+                    progress = newProgress;
+                    Progressbar.updateProgress(progress);
+                }
             }
 
             bw.close();
