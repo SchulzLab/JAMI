@@ -2,12 +2,14 @@ package org.mpii.jami;
 
 import org.mpii.jami.cmi.CMIUniform;
 import org.mpii.jami.cmi.IterativePartitioning;
+import org.mpii.jami.tasks.CMIPseudoUniformGridRecursiveTask;
 import org.mpii.jami.tasks.CMIRecursiveTask;
 import org.mpii.jami.tasks.CMIUniformGridRecursiveTask;
 
 import java.util.*;
 import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.RecursiveTask;
+import java.util.stream.IntStream;
 
 /**
  * Created by fuksova on 11/27/15.
@@ -21,19 +23,16 @@ public class CMIComplete{
     double pValue;  //obtained p-value of CMI
     int numPerm; //number of permutations for p-value computation
     private int maxDeep; //maximum depth of iterative partitioning grid split
-    ForkJoinPool commonPool;
-
 
     /**
      * Initializes data for which CMI is computed
      * @param numPerm Number of permutations for p-value computation
      * @param data input data
      */
-    public CMIComplete(int numPerm,ArrayList<double[]> data, ForkJoinPool fjpool) {
+    public CMIComplete(int numPerm,ArrayList<double[]> data) {
         this.numPerm=numPerm;
         this.origData=data;
         maxDeep=Integer.MAX_VALUE;
-        commonPool = fjpool;
     }
 
     /**
@@ -69,17 +68,16 @@ public class CMIComplete{
             for (int j = 0; j < toBeRandomized.length; j++) {
                 randomizedData[j]=toBeRandomized[currentPermutation.get(j)];
             }
-            ArrayList<double[]> forParitioning=new ArrayList<>(3);
-            forParitioning.add(origData.get(0));
-            forParitioning.add(origData.get(1));
-            forParitioning.add(randomizedData);
-            IterativePartitioning ipRand=new IterativePartitioning(forParitioning);
+            ArrayList<double[]> forPartitioning=new ArrayList<>(3);
+            forPartitioning.add(origData.get(0));
+            forPartitioning.add(origData.get(1));
+            forPartitioning.add(randomizedData);
+            IterativePartitioning ipRand=new IterativePartitioning(forPartitioning);
             randCMI[i]=ipRand.naivePartitioning();
 
         }
         int sum=0;
-        for (int i = 0; i < numPerm; i++)
-        {
+        for (int i = 0; i < numPerm; i++) {
             if(cmi<= randCMI[i]) sum++;
         }
         sum=Math.max(sum,1);
@@ -99,10 +97,15 @@ public class CMIComplete{
         ip.setMaxDeep(maxDeep);
         cmi=ip.iterativePartitioningBetter();
 
-        RecursiveTask<Integer> task = new CMIRecursiveTask(numPerm, cmi, ip, origData.get(2).length);
-        int sum = commonPool.invoke(task);
-        sum=Math.max(sum, 1);
-        pValue=(double) sum/numPerm;
+        //code to split permutations into subtasks... we now rather split by triplet for better performance with
+        //low number of permutations (1000 or less).
+        //RecursiveTask<Integer> task = new CMIRecursiveTask(numPerm, cmi, ip, origData.get(2).length);
+        //int sum = commonPool.invoke(task);
+        long sum = IntStream.range(1, numPerm).mapToDouble(i -> CMIRecursiveTask.computeRandomCMI(origData.get(2).length, ip))
+                .filter(randCMI -> randCMI >= cmi)
+                .count();
+        sum = Math.max(sum, 1);
+        pValue = (double) sum/numPerm;
     }
 
     /**
@@ -113,10 +116,14 @@ public class CMIComplete{
         CMIUniform cmiUniform=new CMIUniform(origData);
         cmi=cmiUniform.computeCMI(numberOfBins);
 
-        RecursiveTask<Integer> task = new CMIUniformGridRecursiveTask(numPerm, cmi, origData, origData.get(2).length, numberOfBins);
-        int sum = commonPool.invoke(task);
-        sum=Math.max(sum, 1);
-        pValue=(double) sum/numPerm;
+        //RecursiveTask<Integer> task = new CMIUniformGridRecursiveTask(numPerm, cmi, origData, origData.get(2).length, numberOfBins);
+        //int sum = commonPool.invoke(task);
+        long sum = IntStream.range(1, numPerm).mapToDouble(
+                i -> CMIUniformGridRecursiveTask.computeRandomCMIinUniformGrid(origData.get(2).length, numberOfBins, origData))
+                .filter(randCMI -> randCMI >= cmi)
+                .count();
+        sum = Math.max(sum, 1);
+        pValue = (double) sum/numPerm;
     }
 
     /**
@@ -130,8 +137,14 @@ public class CMIComplete{
 
         cmi=ip.cmiInUniformGrid(numberOfBins);
 
-        RecursiveTask<Integer> task = new CMIUniformGridRecursiveTask(numPerm, cmi, origData, origData.get(2).length, numberOfBins);
-        int sum = commonPool.invoke(task);
+        //RecursiveTask<Integer> task = new CMIUniformGridRecursiveTask(numPerm, cmi, origData, origData.get(2).length, numberOfBins);
+        //int sum = commonPool.invoke(task);
+        long sum = IntStream.range(1, numPerm).mapToDouble(
+                i -> CMIPseudoUniformGridRecursiveTask.computeRandomCMIinPseudoUniformGrid(origData.get(2).length, numberOfBins, ip))
+                .filter(randCMI -> randCMI >= cmi)
+                .count();
+        sum = Math.max(sum, 1);
+        pValue = (double) sum/numPerm;
         sum=Math.max(sum, 1);
         pValue=(double) sum/numPerm;
     }

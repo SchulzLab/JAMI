@@ -19,7 +19,7 @@ public class CMIUniformGridRecursiveTask extends RecursiveTask<Integer> {
     private double cmi;
     private int numOfSamples;
     private ArrayList<double[]> origData;
-    private static final int THRESHOLD = 100;
+    private static final int THRESHOLD = 1000;
     private int numberOfBins;
 
     public CMIUniformGridRecursiveTask(int permutations,
@@ -57,12 +57,12 @@ public class CMIUniformGridRecursiveTask extends RecursiveTask<Integer> {
     }
 
     private long processing(int permutations) {
-        return(IntStream.range(1, permutations).mapToDouble(i -> computeRandomCMIinUniformGrid())
+        return(IntStream.range(1, permutations).mapToDouble(i -> computeRandomCMIinUniformGrid(numOfSamples, numberOfBins, origData))
                 .filter(randCMI -> randCMI >= cmi)
                 .count());
     }
 
-     private double computeRandomCMIinUniformGrid(){
+     public static double computeRandomCMIinUniformGrid(int numOfSamples, int numberOfBins, ArrayList<double[]> origData){
 
         List<Integer> currentPermutation = IntStream.range(0, numOfSamples)
                 .boxed().collect(Collectors.toList());

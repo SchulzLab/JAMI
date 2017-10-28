@@ -16,7 +16,7 @@ public class CMIRecursiveTask extends RecursiveTask<Integer> {
     private double cmi;
     private int numOfSamples;
     private IterativePartitioning ip;
-    private static final int THRESHOLD = 100;
+    private static final int THRESHOLD = 1000;
 
     public CMIRecursiveTask(int permutations,
                             double cmi,
@@ -51,12 +51,12 @@ public class CMIRecursiveTask extends RecursiveTask<Integer> {
     }
 
     private long processing(int permutations) {
-        return(IntStream.range(1, permutations).mapToDouble(i -> computeRandomCMI())
+        return(IntStream.range(1, permutations).mapToDouble(i -> computeRandomCMI(numOfSamples, ip))
                 .filter(randCMI -> randCMI >= cmi)
                 .count());
     }
 
-    private double computeRandomCMI() {
+    public static double computeRandomCMI(int numOfSamples, IterativePartitioning ip) {
         List<Integer> currentPermutation = IntStream.range(0, numOfSamples)
                 .boxed().collect(Collectors.toList());
         Collections.shuffle(currentPermutation);

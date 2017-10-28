@@ -22,6 +22,19 @@ class TestReadExpressionData extends Specification {
         red.getExpressionData().get(0).size() == 362
     }
 
+    def "read gzipped gene expression table"(){
+        given:
+        def red = new ExpressionData()
+        def fileGeneExpr = new File("data/10_genes_gene_expr.txt.gz")
+
+        when:
+        red.readFile(fileGeneExpr, true)
+
+        then:
+        red.getExpressionData().size() == 10
+        red.getExpressionData().get(0).size() == 362
+    }
+
     def "read full mir expression table"(){
         given:
         def red = new ExpressionData()

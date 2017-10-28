@@ -54,6 +54,9 @@ public class Main {
     @Option(name="-pcut",usage="optional p-value cutoff")
     double pValueCutoff = 1.0;
 
+    @Option(name="-gene",usage="optional p-value cutoff")
+    String gene;
+
     /**
      * Uncomment one of the options
      * @param args
@@ -96,6 +99,7 @@ public class Main {
             settings.put("numberOfThreads", numberOfThreads);
             settings.put("numberOfPermutations", numberOfPermutations);
             settings.put("pValueCutoff", pValueCutoff);
+            settings.put("selectedGene", gene);
             SettingsManager settingsManager = new SettingsManager(settings);
 
             CompleteRun completeRun = new CompleteRun(genesMiRNA,fileGeneExpr,filemiRNAExpr,outputFile, settingsManager);

@@ -3,10 +3,12 @@ package org.mpii.jami.input;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVRecord;
+import org.apache.logging.log4j.core.util.FileUtils;
 
 import java.io.*;
 import java.nio.charset.Charset;
 import java.util.*;
+import java.util.zip.GZIPInputStream;
 
 /**
  * Created by fuksova on 12/1/15.
@@ -53,7 +55,16 @@ public class ExpressionData {
             if(hasHeader) format = CSVFormat.TDF.withFirstRecordAsHeader();
             else format = CSVFormat.TDF;
 
-            CSVParser parser = CSVParser.parse(file, Charset.defaultCharset(), format);
+            CSVParser parser;
+
+            if(FileUtils.getFileExtension(file).equals("gz"))
+            {
+                FileInputStream fis = new FileInputStream(file);
+                GZIPInputStream gis = new GZIPInputStream(fis);
+                InputStreamReader isr = new InputStreamReader(gis);
+                parser = CSVParser.parse(isr, format);
+            }
+            else parser = CSVParser.parse(file, Charset.defaultCharset(), format);
 
             for (CSVRecord record : parser)
             {

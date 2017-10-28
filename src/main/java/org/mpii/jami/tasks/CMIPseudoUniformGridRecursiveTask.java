@@ -19,7 +19,7 @@ public class CMIPseudoUniformGridRecursiveTask extends RecursiveTask<Integer> {
     private double cmi;
     private int numOfSamples;
     private IterativePartitioning ip;
-    private static final int THRESHOLD = 100;
+    private static final int THRESHOLD = 1000;
     private int numberOfBins;
 
     public CMIPseudoUniformGridRecursiveTask(int permutations,
@@ -57,12 +57,12 @@ public class CMIPseudoUniformGridRecursiveTask extends RecursiveTask<Integer> {
     }
 
     private long processing(int permutations) {
-        return(IntStream.range(1, permutations).mapToDouble(i -> computeRandomCMIinPseudoUniformGrid())
+        return(IntStream.range(1, permutations).mapToDouble(i -> computeRandomCMIinPseudoUniformGrid(numOfSamples, numberOfBins, ip))
                 .filter(randCMI -> randCMI >= cmi)
                 .count());
     }
 
-     private double computeRandomCMIinPseudoUniformGrid(){
+     public static double computeRandomCMIinPseudoUniformGrid(int numOfSamples, int numberOfBins, IterativePartitioning ip){
 
         List<Integer> currentPermutation = IntStream.range(0, numOfSamples)
                 .boxed().collect(Collectors.toList());

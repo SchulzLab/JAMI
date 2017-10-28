@@ -61,7 +61,10 @@ public class InteractionData {
             line=br.readLine();
             while (line!=null) {
                 String[] entries = pattern.split(line);
-                this.triplets.add(new Triplet(entries));
+                Triplet entry = new Triplet(entries);
+                if(!this.triplets.contains(entry)) this.triplets.add(entry);
+                Triplet reverseEntry = new Triplet(entries[1], entries[0], entries[2]);
+                if(!this.triplets.contains(reverseEntry)) this.triplets.add(reverseEntry);
                 this.genes.add(entries[0]);
                 this.genes.add(entries[1]);
                 this.miRNAs.add(entries[2]);
@@ -136,14 +139,11 @@ public class InteractionData {
         HashMap<String, String[]> genesToMiRNA = geneToMiRNA(fileGenesMiRNA, "\t", ",", true);
 
         this.genes.addAll(genesToMiRNA.keySet());
-        ArrayList<String> genes_processed = new ArrayList<>();
 
         for(String geneA : genes) {
-            genes_processed.add(geneA);
-            ArrayList<String> genes_to_test = new ArrayList<>(genes);
-            genes_to_test.removeAll(genes_processed);
 
-            for (String geneB : genes_to_test) {
+            for (String geneB : genes) {
+                if(geneA == geneB) continue;
 
                 HashSet<String> miRNAsA =
                         new HashSet<>(Arrays.asList(genesToMiRNA.get(geneA)));
@@ -156,7 +156,7 @@ public class InteractionData {
 
                 for (String miR : miRNAsA) {
                     Triplet triple = new Triplet(geneA, geneB, miR);
-                    this.triplets.add(triple);
+                    if(!this.triplets.contains(triple)) this.triplets.add(triple);
                 }
             }
         }

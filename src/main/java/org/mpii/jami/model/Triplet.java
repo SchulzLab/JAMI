@@ -8,6 +8,8 @@ public class Triplet {
     private String geneOne;
     private String geneTwo;
     private String miRNA;
+    private double cmi;
+    private double pValue;
 
     public Triplet(String[] args){
         this(args[0], args[1], args[2]);
@@ -17,6 +19,22 @@ public class Triplet {
         this.geneOne = geneOne;
         this.geneTwo = geneTwo;
         this.miRNA = miRNA;
+    }
+
+    public double getCmi() {
+        return cmi;
+    }
+
+    public void setCmi(double cmi) {
+        this.cmi = cmi;
+    }
+
+    public double getpValue() {
+        return pValue;
+    }
+
+    public void setpValue(double pValue) {
+        this.pValue = pValue;
     }
 
     public String getGeneOne() {
