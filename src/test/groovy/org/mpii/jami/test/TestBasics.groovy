@@ -28,7 +28,10 @@ class TestBasics extends Specification {
         completeRun.completed == true
         completeRun.tripletsWrittenToDisk == 2
         Triplet query = new Triplet("ENSG00000100767", "ENSG00000105855", "MIMAT0000421")
-        double cmi = (double) completeRun.getCmis().get(query)
+        Triplet t = completeRun.getTriplets().find{
+            (it == query)
+        }
+        double cmi = t.getCmi()
         cmi closeTo(0.09727, 0.09728)
     }
 

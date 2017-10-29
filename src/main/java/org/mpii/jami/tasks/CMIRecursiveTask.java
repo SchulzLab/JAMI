@@ -1,10 +1,12 @@
 package org.mpii.jami.tasks;
 
+import org.mpii.jami.cmi.Cube;
 import org.mpii.jami.cmi.IterativePartitioning;
 
 import java.util.*;
 import java.util.concurrent.ForkJoinTask;
 import java.util.concurrent.RecursiveTask;
+import java.util.concurrent.ThreadLocalRandom;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -51,15 +53,15 @@ public class CMIRecursiveTask extends RecursiveTask<Integer> {
     }
 
     private long processing(int permutations) {
-        return(IntStream.range(1, permutations).mapToDouble(i -> computeRandomCMI(numOfSamples, ip))
+        return(IntStream.range(1, permutations).mapToDouble(i -> computeRandomCMI(numOfSamples, ip, IterativePartitioning.getInitialCube(numOfSamples)))
                 .filter(randCMI -> randCMI >= cmi)
                 .count());
     }
 
-    public static double computeRandomCMI(int numOfSamples, IterativePartitioning ip) {
+    public static double computeRandomCMI(int numOfSamples, IterativePartitioning ip, Cube initialCube) {
         List<Integer> currentPermutation = IntStream.range(0, numOfSamples)
                 .boxed().collect(Collectors.toList());
-        Collections.shuffle(currentPermutation);
+        Collections.shuffle(currentPermutation, ThreadLocalRandom.current());
 
         Integer[] randomizedSorted = new Integer[numOfSamples];
         Integer[] randomizedInverse = new Integer[numOfSamples];
@@ -80,6 +82,6 @@ public class CMIRecursiveTask extends RecursiveTask<Integer> {
         inverse.add(randomizedInverse);
         IterativePartitioning ipRand = new IterativePartitioning(sorted, inverse);
         ipRand.setMaxDeep(ip.getMaxDeep());
-        return (ipRand.iterativePartitioningBetter());
+        return (ipRand.iterativePartitioningBetter(initialCube));
     }
 }

@@ -1,6 +1,7 @@
 package org.mpii.jami;
 
 import org.mpii.jami.cmi.CMIUniform;
+import org.mpii.jami.cmi.Cube;
 import org.mpii.jami.cmi.IterativePartitioning;
 import org.mpii.jami.tasks.CMIPseudoUniformGridRecursiveTask;
 import org.mpii.jami.tasks.CMIRecursiveTask;
@@ -18,7 +19,7 @@ import java.util.stream.IntStream;
  */
 public class CMIComplete{
     public static ArrayList<ArrayList<Integer>> randomizedIndices; //used for randomizing data in third array of origData
-    ArrayList<double[]> origData;  //Input data for that CMI is computed
+    ArrayList<List<Double>> origData;  //Input data for that CMI is computed
     double cmi;  //Obtained cmi value
     double pValue;  //obtained p-value of CMI
     int numPerm; //number of permutations for p-value computation
@@ -29,7 +30,7 @@ public class CMIComplete{
      * @param numPerm Number of permutations for p-value computation
      * @param data input data
      */
-    public CMIComplete(int numPerm,ArrayList<double[]> data) {
+    public CMIComplete(int numPerm,ArrayList<List<Double>> data) {
         this.numPerm=numPerm;
         this.origData=data;
         maxDeep=Integer.MAX_VALUE;
@@ -60,15 +61,15 @@ public class CMIComplete{
         IterativePartitioning ip=new IterativePartitioning(origData);
         double[] randCMI =new double[numPerm];
         cmi=ip.naivePartitioning();
-        double[] toBeRandomized=origData.get(2);
+        List<Double> toBeRandomized=origData.get(2);
 
         for (int i = 0; i < numPerm; i++) {
-            double [] randomizedData=new double[toBeRandomized.length];
+            List<Double> randomizedData= new ArrayList<>(toBeRandomized.size());
             ArrayList<Integer> currentPermutation = randomizedIndices.get(i);
-            for (int j = 0; j < toBeRandomized.length; j++) {
-                randomizedData[j]=toBeRandomized[currentPermutation.get(j)];
+            for (int j = 0; j < toBeRandomized.size(); j++) {
+                randomizedData.set(j, toBeRandomized.get(currentPermutation.get(j)));
             }
-            ArrayList<double[]> forPartitioning=new ArrayList<>(3);
+            ArrayList<List<Double>> forPartitioning=new ArrayList<>(3);
             forPartitioning.add(origData.get(0));
             forPartitioning.add(origData.get(1));
             forPartitioning.add(randomizedData);
@@ -92,16 +93,17 @@ public class CMIComplete{
      * However, drawbacks of this method should be considered. For instance, if all values in the
      * second data set are zeros, this methods outputs nonzero CMI value which can be moreover evaluated as significant.
      */
-    public void computeIterativePartitioning(){
+    public void computeIterativePartitioning(Cube initialCube){
         IterativePartitioning ip=new IterativePartitioning(origData);
         ip.setMaxDeep(maxDeep);
-        cmi=ip.iterativePartitioningBetter();
+        cmi=ip.iterativePartitioningBetter(initialCube);
 
         //code to split permutations into subtasks... we now rather split by triplet for better performance with
         //low number of permutations (1000 or less).
         //RecursiveTask<Integer> task = new CMIRecursiveTask(numPerm, cmi, ip, origData.get(2).length);
         //int sum = commonPool.invoke(task);
-        long sum = IntStream.range(1, numPerm).mapToDouble(i -> CMIRecursiveTask.computeRandomCMI(origData.get(2).length, ip))
+        long sum = IntStream.range(1, numPerm)
+                .mapToDouble(i -> CMIRecursiveTask.computeRandomCMI(origData.get(2).size(), ip, initialCube))
                 .filter(randCMI -> randCMI >= cmi)
                 .count();
         sum = Math.max(sum, 1);
@@ -119,7 +121,7 @@ public class CMIComplete{
         //RecursiveTask<Integer> task = new CMIUniformGridRecursiveTask(numPerm, cmi, origData, origData.get(2).length, numberOfBins);
         //int sum = commonPool.invoke(task);
         long sum = IntStream.range(1, numPerm).mapToDouble(
-                i -> CMIUniformGridRecursiveTask.computeRandomCMIinUniformGrid(origData.get(2).length, numberOfBins, origData))
+                i -> CMIUniformGridRecursiveTask.computeRandomCMIinUniformGrid(origData.get(2).size(), numberOfBins, origData))
                 .filter(randCMI -> randCMI >= cmi)
                 .count();
         sum = Math.max(sum, 1);
@@ -140,7 +142,7 @@ public class CMIComplete{
         //RecursiveTask<Integer> task = new CMIUniformGridRecursiveTask(numPerm, cmi, origData, origData.get(2).length, numberOfBins);
         //int sum = commonPool.invoke(task);
         long sum = IntStream.range(1, numPerm).mapToDouble(
-                i -> CMIPseudoUniformGridRecursiveTask.computeRandomCMIinPseudoUniformGrid(origData.get(2).length, numberOfBins, ip))
+                i -> CMIPseudoUniformGridRecursiveTask.computeRandomCMIinPseudoUniformGrid(origData.get(2).size(), numberOfBins, ip))
                 .filter(randCMI -> randCMI >= cmi)
                 .count();
         sum = Math.max(sum, 1);

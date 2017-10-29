@@ -1,22 +1,23 @@
 package org.mpii.jami.cmi;
 
 import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Created by fuksova on 1/21/16.
  * Compute conditional mutual information on uniform grid
  */
 public class CMIUniform {
-    ArrayList<double[]> data;  //Input data, double[] arrays have to have all the same length
+    ArrayList<List<Double>> data;  //Input data, double[] arrays have to have all the same length
     int pointsSize;   //length of double[] arrays in data
     int dimension;    //size of data. Currently the dimension has to be equal to 3!
 
 
 
 
-    public CMIUniform(ArrayList<double[]> data){
+    public CMIUniform(ArrayList<List<Double>> data){
         this.data=data;
-        pointsSize=data.get(0).length;
+        pointsSize=data.get(0).size();
         dimension=data.size();
 
     }
@@ -67,14 +68,14 @@ public class CMIUniform {
         for (int i = 0; i < pointsSize; i++) {
             int[] cubeOrder=new int[dimension];
             for (int j = 0; j < dimension; j++) {
-                double coord=data.get(j)[i];
+                double coord=data.get(j).get(i);
                 cubeOrder[j]=(int)Math.min(Math.floor((coord-minMax[j][0])/binWidth[j]),numberOfBins-1);
             }
             CubeDoubleBounds selectedCube = allCubes[cubeOrder[0]][cubeOrder[1]][cubeOrder[2]];
             selectedCube.addPoint(i);
             //for debugging purposes:
             for (int j = 0; j < dimension; j++) {
-                double coord=data.get(j)[i];
+                double coord=data.get(j).get(i);
                 if(coord<selectedCube.getCoordinates()[j][0]||coord>=selectedCube.getCoordinates()[j][1]){
                     System.out.println("Wrong point assignment point "+i);
                 }
@@ -98,15 +99,15 @@ public class CMIUniform {
      * @param array
      * @return returns double[] of length 2, first value is minimum, second is maximum
      */
-    private double[] findMinAndMax(double[] array){
+    private double[] findMinAndMax(List<Double> array){
         double min=Double.MAX_VALUE;
         double max=Double.MIN_VALUE;
-        for (int i = 0; i < array.length; i++) {
-            if(array[i]<min){
-                min=array[i];
+        for (int i = 0; i < array.size(); i++) {
+            if(array.get(i)<min){
+                min=array.get(i);
             }
-            if(array[i]>max){
-                max=array[i];
+            if(array.get(i)>max){
+                max=array.get(i);
             }
         }
         double[]result=new double[2];

@@ -18,13 +18,13 @@ public class CMIUniformGridRecursiveTask extends RecursiveTask<Integer> {
     private int permutations;
     private double cmi;
     private int numOfSamples;
-    private ArrayList<double[]> origData;
+    private ArrayList<List<Double>> origData;
     private static final int THRESHOLD = 1000;
     private int numberOfBins;
 
     public CMIUniformGridRecursiveTask(int permutations,
                                        double cmi,
-                                       ArrayList<double[]> origData,
+                                       ArrayList<List<Double>> origData,
                                        int numOfSamples,
                                        int numberOfBins
                             ) {
@@ -62,18 +62,18 @@ public class CMIUniformGridRecursiveTask extends RecursiveTask<Integer> {
                 .count());
     }
 
-     public static double computeRandomCMIinUniformGrid(int numOfSamples, int numberOfBins, ArrayList<double[]> origData){
+     public static double computeRandomCMIinUniformGrid(int numOfSamples, int numberOfBins, ArrayList<List<Double>> origData){
 
         List<Integer> currentPermutation = IntStream.range(0, numOfSamples)
                 .boxed().collect(Collectors.toList());
         Collections.shuffle(currentPermutation);
 
-        double[] randomized= new double[numOfSamples];
+        List<Double> randomized= new ArrayList<>(numOfSamples);
 
         for (int j = 0; j < numOfSamples; j++) {
-            randomized[j]= origData.get(2)[currentPermutation.get(j)];
+            randomized.set(j, origData.get(2).get(currentPermutation.get(j)));
         }
-        ArrayList<double[]> randData=new ArrayList<>();
+        ArrayList<List<Double>> randData=new ArrayList<>();
         randData.add(origData.get(0));
         randData.add(origData.get(1));
         randData.add(randomized);

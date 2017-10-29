@@ -18,7 +18,7 @@ import java.util.*;
 public class IterativePartitioning {
     private static final Logger logger = LogManager.getLogger("JAMI");
 
-    private ArrayList<double[]> data; //List of input data for cmi computation, currently works for dimension=3
+    private ArrayList<List<Double>> data; //List of input data for cmi computation, currently works for dimension=3
     private int pointsSize;  //number of data points
     private int dimension;  //dimension of data, must be 3
     private int dimCombinat; //2^dimension
@@ -40,7 +40,6 @@ public class IterativePartitioning {
     private LinkedList<Cube> usedCubes;  //list of cubes that were used for CMI computation
     private int maxDeep; //Maximal deep of splitting space into cubes
 
-
     public int getMaxDeep() {
         return maxDeep;
     }
@@ -56,9 +55,9 @@ public class IterativePartitioning {
      * @param oldSorted data structure that can be partially of fully reused for sortedIndices
      * @param oldInverse data structure that can be partially of fully reused for inverseSortedIndices
      */
-    public  IterativePartitioning(ArrayList<double[]> inputData,boolean[] toRecompute,ArrayList<Integer[]> oldSorted,ArrayList<Integer[]> oldInverse){
+    public  IterativePartitioning(ArrayList<List<Double>> inputData,boolean[] toRecompute,ArrayList<Integer[]> oldSorted,ArrayList<Integer[]> oldInverse){
         data=inputData;
-        pointsSize=inputData.get(0).length;
+        pointsSize=inputData.get(0).size();
         dimension=inputData.size();
         dimCombinat=(int)Math.pow(2,dimension);
         magicNumbers= new double[]{0, 7.81, 13.9, 25.0, 42.0};
@@ -72,7 +71,6 @@ public class IterativePartitioning {
 
         usedCubes=new LinkedList<>();
         maxDeep=Integer.MAX_VALUE;
-
     }
 
     /**
@@ -98,7 +96,7 @@ public class IterativePartitioning {
      * Basic constructor that initializes all necessary structures based on double valued data
      * @param inputData
      */
-    public IterativePartitioning(ArrayList<double[]> inputData){
+    public IterativePartitioning(ArrayList<List<Double>> inputData){
        this(inputData, null, null, null);
     }
 
@@ -108,7 +106,7 @@ public class IterativePartitioning {
     private void computeInverseOrders(){
         inverseSortedIndices = new ArrayList<>();
         sortedIndices=new ArrayList<>();
-        for (double[] doubles : data) {
+        for (List<Double> doubles : data) {
             ComparatorForIndices comp = new ComparatorForIndices(doubles);
             Integer[] arrayToSort = comp.getArrayToSort();
             Arrays.sort(arrayToSort, comp);
@@ -132,7 +130,7 @@ public class IterativePartitioning {
         sortedIndices=new ArrayList<>();
         for (int i = 0; i < dimension; i++) {
             if(toRecompute[i]){
-                double [] doubles=data.get(i);
+                List<Double> doubles=data.get(i);
                 ComparatorForIndices comp = new ComparatorForIndices(doubles);
                 Integer[] arrayToSort = comp.getArrayToSort();
                 Arrays.sort(arrayToSort, comp);
@@ -152,7 +150,7 @@ public class IterativePartitioning {
      *
      * @return Initial cube that has bounds 1..pointsSize in every dimension and contains all input points.
      */
-    private Cube getInitialCube(){
+    public static Cube getInitialCube(int pointsSize){
 
         int start = 0;
         int end = pointsSize - 1;
@@ -212,7 +210,7 @@ public class IterativePartitioning {
      */
     public double naivePartitioning() {
         Stack<Cube> stack = new Stack<>();
-        Cube initialCube=getInitialCube();
+        Cube initialCube=getInitialCube(this.pointsSize);
         stack.push(initialCube);
 
         double cmi=0;
@@ -380,10 +378,9 @@ public class IterativePartitioning {
      * The same principle of iterative partitioning as in Cupid but with some implementation enhancements
      * @return CMI value
      */
-    public double iterativePartitioningBetter(){
+    public double iterativePartitioningBetter(Cube initialCube){
         Stack<Cube> stack = new Stack<>();
         Stack<TreeNode> stack2 = new Stack<>();
-        Cube initialCube=getInitialCube();
         TreeNode rootNode=new TreeNode(initialCube);
         stack2.push(rootNode);
         stack.push(initialCube);

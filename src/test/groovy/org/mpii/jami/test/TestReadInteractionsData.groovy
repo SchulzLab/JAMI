@@ -19,7 +19,7 @@ class TestReadInteractionsData extends Specification {
         then:
         interactions.getGenes().size() == 10
         interactions.getMiRNAs().size() == 32 //number of miRNAs
-        interactions.getTriplets().size() == 171 //number of triplets in file
+        interactions.getTriplets().size() == 342 //number of triplets in file (or up to * 2 if reverse are not included)
     }
 
     def "read interactions in set format"(){
@@ -33,6 +33,6 @@ class TestReadInteractionsData extends Specification {
         then:
         interactions.getGenes().size() == 10 //8 genes have no interactions
         interactions.getMiRNAs().size() == 32
-        interactions.getTriplets().size() == 171
+        interactions.getTriplets().size() == 342
     }
 }

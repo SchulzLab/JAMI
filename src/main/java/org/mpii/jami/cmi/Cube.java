@@ -62,9 +62,7 @@ public class Cube {
      *                   in IterativePartitioning
      */
     public void addPoints(Collection<Integer> newPoints){
-        for (Integer newPoint : newPoints) {
-            points.add(newPoint);
-        }
+        points.addAll(newPoints);
     }
 
     /**

@@ -19,7 +19,7 @@ import java.util.zip.GZIPInputStream;
 public class ExpressionData {
 
     private ArrayList<String> names; //Names stored at corresponding indices
-    private ArrayList<double[]> expressionData; //expressionData.get(i) returns expression data corresponding to the i-th name
+    private ArrayList<List<Double>> expressionData; //expressionData.get(i) returns expression data corresponding to the i-th name
     private HashMap<String,Integer> nameToData; //Returns index corresponding to given name
     private int numberOfSamples = -1;
 
@@ -93,23 +93,19 @@ public class ExpressionData {
 
     private void addEntry(CSVRecord record, int entryCount){
         nameToData.put(record.get(0), entryCount);
-        double[] entries = new double[(record.size()-1)];
+        ArrayList<Double> entries = new ArrayList<>(record.size()-1);
         for (int i = 1; i < record.size(); i++) {
-
-            entries[i - 1] = Double.parseDouble(record.get(i));
+            entries.add(Double.parseDouble(record.get(i)));
         }
-        expressionData.add(entries);
+        expressionData.add(Collections.unmodifiableList(entries));
     }
 
     /**
      * Name of gene/miRNA at index i means that expression data to this name are stored at the i-th index in expressionData
      * @return list with gene/miRNA names
      */
-    public ArrayList<String> getIntegersToNames() {
-        return names;
-    }
 
-    public ArrayList<double[]> getExpressionData() {
+    public ArrayList<List<Double>> getExpressionData() {
         return expressionData;
     }
 
@@ -117,19 +113,5 @@ public class ExpressionData {
         return nameToData;
     }
 
-    /**
-     * Expression data to gene/miRNA name
-     * @param id gene/miRNA name
-     * @return expression data for given gene/miRNA name
-     */
-    public double[] getExpressionDataToID(String id){
-        Integer index=nameToData.get(id);
-        if(index!=null){
-            return expressionData.get(index);
-        }
-        else{
-            return null;
-        }
-    }
 
 }

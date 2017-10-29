@@ -8,6 +8,9 @@ public class Triplet {
     private String geneOne;
     private String geneTwo;
     private String miRNA;
+    private int geneOneIndex;
+    private int geneTwoIndex;
+    private int miRNAIndex;
     private double cmi;
     private double pValue;
 
@@ -19,6 +22,30 @@ public class Triplet {
         this.geneOne = geneOne;
         this.geneTwo = geneTwo;
         this.miRNA = miRNA;
+    }
+
+    public int getGeneOneIndex() {
+        return geneOneIndex;
+    }
+
+    public void setGeneOneIndex(int geneOneIndex) {
+        this.geneOneIndex = geneOneIndex;
+    }
+
+    public int getGeneTwoIndex() {
+        return geneTwoIndex;
+    }
+
+    public void setGeneTwoIndex(int geneTwoIndex) {
+        this.geneTwoIndex = geneTwoIndex;
+    }
+
+    public int getMiRNAIndex() {
+        return miRNAIndex;
+    }
+
+    public void setMiRNAIndex(int miRNAIndex) {
+        this.miRNAIndex = miRNAIndex;
     }
 
     public double getCmi() {

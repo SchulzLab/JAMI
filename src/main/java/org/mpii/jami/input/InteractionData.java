@@ -175,9 +175,6 @@ public class InteractionData {
         for(Triplet triplet : triplets){
             if(triplet.getGeneOne().equals(selectedGene))
                 retainedTriplets.add(triplet);
-            if(triplet.getGeneTwo().equals(selectedGene)){
-                retainedTriplets.add(new Triplet(triplet.getGeneTwo(), triplet.getGeneOne(), triplet.getMiRNA()));
-            }
         }
         this.triplets = retainedTriplets;
     }
