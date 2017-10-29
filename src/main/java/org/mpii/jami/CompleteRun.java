@@ -99,17 +99,12 @@ public class CompleteRun{
         if(tripleFormat){
             logger.info("Reading CMI candidate file in triplet format.");
 
-            interactions.readFileWithTriples(this.fileGenesMiRNA);
+            interactions.readFileWithTriples(this.fileGenesMiRNA, selectedGene);
         }
         else{
             logger.info("Reading CMI candidate file in set format.");
 
-            interactions.readFileInSetFormat(this.fileGenesMiRNA);
-        }
-
-        if(this.selectedGene != null){
-            logger.info("Filtering interactions for gene " + selectedGene);
-            interactions.filterByGene(selectedGene);
+            interactions.readFileInSetFormat(this.fileGenesMiRNA, selectedGene);
         }
 
         logger.info("" + interactions.getTriplets().size() + " interactions (triplets) selected for processing.");
@@ -153,6 +148,10 @@ public class CompleteRun{
                 logger.warn("miRNA " + miRNAName + " not found in miRNA expression data");
                 return null;
             }
+
+            t.setGeneOneIndex(gene1Index);
+            t.setGeneTwoIndex(gene2Index);
+            t.setMiRNAIndex(miRNAIndex);
             return(t);
 
         }).collect(Collectors.toList());

@@ -35,4 +35,18 @@ class TestReadInteractionsData extends Specification {
         interactions.getMiRNAs().size() == 32
         interactions.getTriplets().size() == 342
     }
+
+    def "read interactions in gzipped set format"(){
+        given:
+        def interactions = new InteractionData()
+        def tripletFile = new File("data/10_genes_mirna_interactions_set_format.txt.gz")
+
+        when:
+        interactions.readFileInSetFormat(tripletFile)
+
+        then:
+        interactions.getGenes().size() == 10 //8 genes have no interactions
+        interactions.getMiRNAs().size() == 32
+        interactions.getTriplets().size() == 342
+    }
 }

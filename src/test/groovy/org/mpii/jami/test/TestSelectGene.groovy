@@ -17,12 +17,46 @@ class TestSelectGene extends Specification {
     def "test select gene"()
     {
         given:
-        def outputFileName = new File("out/test/test_p_value_cutoff.csv")
+        def outputFileName = new File("out/test/test_select_gene_filter.csv")
 
         when:
         CompleteRun completeRun = new CompleteRun(genesMiRNA,fileGeneExpr,filemiRNAExpr, outputFileName)
         completeRun.numberOfPermutations = 100
         completeRun.filterForGene("ENSG00000110427")
+        completeRun.runComputation()
+
+        then:
+        completeRun.completed == true
+        completeRun.tripletsWrittenToDisk == 40
+    }
+
+    def "test select gene triplet"()
+    {
+        given:
+        def outputFileName = new File("out/test/test_select_gene_triplet.csv")
+
+        when:
+        CompleteRun completeRun = new CompleteRun(genesMiRNA,fileGeneExpr,filemiRNAExpr, outputFileName)
+        completeRun.numberOfPermutations = 100
+        completeRun.selectedGene = "ENSG00000110427"
+        completeRun.runComputation()
+
+        then:
+        completeRun.completed == true
+        completeRun.tripletsWrittenToDisk == 40
+    }
+
+    def "test select gene during reading set file"()
+    {
+        given:
+        def outputFileName = new File("out/test/test_select_gene_set.csv")
+        def genesMiRNA = new File("data/10_genes_mirna_interactions_set_format.txt")
+
+        when:
+        CompleteRun completeRun = new CompleteRun(genesMiRNA,fileGeneExpr,filemiRNAExpr, outputFileName)
+        completeRun.numberOfPermutations = 100
+        completeRun.selectedGene = "ENSG00000110427"
+        completeRun.tripleFormat = false
         completeRun.runComputation()
 
         then:

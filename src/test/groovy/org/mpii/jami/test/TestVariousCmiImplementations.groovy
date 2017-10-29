@@ -39,7 +39,7 @@ class TestVariousCmiImplementations extends Specification {
             (it == query)
         }
         double cmi = t.getCmi()
-        cmi closeTo(0.09727, 0.09728)
+        cmi closeTo(0.08391, 0.001)
     }
 
     def "test pseudouniform grid"()
@@ -61,7 +61,7 @@ class TestVariousCmiImplementations extends Specification {
             (it == query)
         }
         double cmi = t.getCmi()
-        cmi closeTo(0.09727, 0.09728)
+        cmi closeTo(0.08391, 0.001)
     }
 
     def "test cupid"()
@@ -82,7 +82,7 @@ class TestVariousCmiImplementations extends Specification {
             (it == query)
         }
         double cmi = t.getCmi()
-        cmi closeTo(0.09727, 0.09728)
+        cmi closeTo(0.08391, 0.001)
     }
 
     def "test normal"()
@@ -102,7 +102,7 @@ class TestVariousCmiImplementations extends Specification {
             (it == query)
         }
         double cmi = t.getCmi()
-        cmi closeTo(0.09727, 0.09728)
+        cmi closeTo(0.08391, 0.001)
     }
 
     def "test normal with set format"()
@@ -124,7 +124,7 @@ class TestVariousCmiImplementations extends Specification {
             (it == query)
         }
         double cmi = t.getCmi()
-        cmi closeTo(0.09727, 0.09728)
+        cmi closeTo(0.08391, 0.001)
     }
 
 }

@@ -54,7 +54,7 @@ public class Main {
     @Option(name="-pcut",usage="optional p-value cutoff")
     double pValueCutoff = 1.0;
 
-    @Option(name="-gene",usage="optional p-value cutoff")
+    @Option(name="-gene",usage="filter for miRNA triplets with this gene as regulator")
     String gene;
 
     /**
