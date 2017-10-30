@@ -109,6 +109,11 @@ public class CompleteRun{
 
         logger.info("" + interactions.getTriplets().size() + " interactions (triplets) selected for processing.");
 
+        if(interactions.getTriplets().size() == 0){
+            logger.info("Exit");
+            System.exit(0);
+        }
+
         //read only gene and miRNA expression data we actually need
         ArrayList<String> geneNames=new ArrayList<>(interactions.getGenes());
         ArrayList<String> miRNANames=new ArrayList<>(interactions.getMiRNAs());

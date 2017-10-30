@@ -51,6 +51,8 @@ public class InteractionData {
      */
     private void readTriples(File file, String separator, boolean skipFirst, String selectedGene){
         Pattern pattern = Pattern.compile(separator);
+        boolean selectedGeneFound = true;
+        if(selectedGene != null) selectedGeneFound = false;
 
         try {
             BufferedReader br = readFile(file);
@@ -64,7 +66,7 @@ public class InteractionData {
                 if((selectedGene != null && entries[0].equals(selectedGene)) || selectedGene == null) {
                     Triplet entry = new Triplet(entries);
                     if (!this.triplets.contains(entry)) this.triplets.add(entry);
-
+                    if(selectedGene != null) selectedGeneFound = true;
                     this.genes.add(entries[0]);
                     this.genes.add(entries[1]);
                     this.miRNAs.add(entries[2]);
@@ -77,6 +79,7 @@ public class InteractionData {
                 line=br.readLine();
             }
             br.close();
+            if(!selectedGeneFound) logger.warn("No miRNA interactions were found for " + selectedGene);
 
         } catch (FileNotFoundException e) {
             e.printStackTrace();
@@ -169,6 +172,10 @@ public class InteractionData {
 
         for(String geneA : outerLoopGenes) {
 
+            if(genesToMiRNA.get(geneA) == null){
+                logger.warn("No miRNA interactions were found for " + selectedGene);
+                continue;
+            }
             for (String geneB : genes) {
                 if(geneA.equals(geneB)) continue;
 
