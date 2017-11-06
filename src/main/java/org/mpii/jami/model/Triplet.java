@@ -1,5 +1,7 @@
 package org.mpii.jami.model;
 
+import java.util.function.Predicate;
+
 /**
  * Created by mlist on 10/26/17.
  */
@@ -13,6 +15,7 @@ public class Triplet {
     private int miRNAIndex;
     private double cmi;
     private double pValue;
+    private double pAdjust;
 
     public Triplet(String[] args){
         this(args[0], args[1], args[2]);
@@ -80,6 +83,12 @@ public class Triplet {
         return new String[]{this.geneOne, this.geneTwo, this.miRNA};
     }
 
+    private boolean isValid = true;
+
+    public void markInvalid(){
+        this.isValid = false;
+    }
+
     @Override
     public int hashCode() {
         return geneOne.hashCode() + geneTwo.hashCode() + miRNA.hashCode();
@@ -92,5 +101,17 @@ public class Triplet {
         if(!this.geneTwo.equals(triplet.geneTwo)) return(false);
         if(!this.miRNA.equals(triplet.miRNA)) return(false);
         return(true);
+    }
+
+    public static Predicate<Triplet> check(){
+        return t -> t.isValid;
+    };
+
+    public void setpAdjust(Double pAdjust) {
+        this.pAdjust = pAdjust;
+    }
+
+    public double getpAdjust() {
+        return(this.pAdjust);
     }
 }

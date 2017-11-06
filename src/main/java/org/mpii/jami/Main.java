@@ -51,7 +51,7 @@ public class Main {
     @Option(name="-noheader",usage="set this option if the input expression files have no headers")
     boolean noheader = false;
 
-    @Option(name="-pcut",usage="optional p-value cutoff")
+    @Option(name="-pcut",usage="optional Benjamini Hochberg adjusted p-value cutoff")
     double pValueCutoff = 1.0;
 
     @Option(name="-gene",usage="filter for miRNA triplets with this gene as regulator")
@@ -106,7 +106,10 @@ public class Main {
             completeRun.runComputation();
 
         } catch(Exception e){
-            System.err.println(e.getMessage());
+            System.err.println("ERROR:" + e.getMessage());
+            System.err.println("ERROR DETAILS:");
+            e.printStackTrace(System.err);
+            System.err.println("JAMI USAGE:");
             System.err.println("java JAMI [options...] gene_expression_file mir_expression_file gene_mir_interactions");
             parser.printUsage(System.err);
             System.err.println();

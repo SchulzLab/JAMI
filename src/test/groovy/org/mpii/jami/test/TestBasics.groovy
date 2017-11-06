@@ -1,6 +1,8 @@
 package org.mpii.jami.test
 
 import org.mpii.jami.CompleteRun
+import org.mpii.jami.helpers.BenjaminiHochberg
+import org.mpii.jami.helpers.FisherMethod
 import org.mpii.jami.model.Triplet
 import spock.lang.Specification
 import static spock.util.matcher.HamcrestMatchers.closeTo
@@ -32,8 +34,33 @@ class TestBasics extends Specification {
             (it == query)
         }
         double cmi = t.getCmi()
-        cmi closeTo(0.09727, 0.09728)
+        cmi closeTo(0.09727, 0.00001)
     }
 
+    def "test adjusting p-values"()
+    {
+        given:
+        double[] pValues = [0.01, 0.0004, 0.000005, 0.0004, 0.5, 0.1, 0.000001, 1.0]
+
+        when:
+        double[] adjustedPValues = BenjaminiHochberg.adjustPValues(pValues)
+        adjustedPValues = adjustedPValues.collect{ it -> Math.round(it * 10000000d) / 10000000d }
+
+        then:
+        adjustedPValues == [0.0160000, 0.0008000, 0.0000200, 0.0008000, 0.5714286, 0.1333333, 0.0000080, 1.0000000]
+    }
+
+
+    def "test Fisher method"()
+    {
+        given:
+        List<Double> pValues =  [0.0001d, 0.0001d, 0.9999d, 0.9999d]
+
+        when:
+        double metaP = FisherMethod.combinedPValue(pValues)
+
+        then:
+        metaP closeTo(0.0000123, 0.0000001)
+    }
 
 }
