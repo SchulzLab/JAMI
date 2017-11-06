@@ -1,6 +1,7 @@
 package org.mpii.jami.test
 
 import org.mpii.jami.input.InteractionData
+import org.mpii.jami.model.Triplet
 import spock.lang.Specification
 
 
@@ -48,5 +49,19 @@ class TestReadInteractionsData extends Specification {
         interactions.getGenes().size() == 10 //8 genes have no interactions
         interactions.getMiRNAs().size() == 32
         interactions.getTriplets().size() == 342
+    }
+
+    def "read large interaction file in gzipped set format"(){
+        given:
+        def interactions = new InteractionData()
+        def tripletFile = new File("data/mircode_set_format.txt.gz")
+
+        when:
+        interactions.readFileInSetFormat(tripletFile, "ENSG00000171862")
+
+        then:
+        interactions.getGenes().size() == 50186
+        interactions.getMiRNAs().size() == 130
+        interactions.getTriplets().contains(new Triplet("ENSG00000171862", "ENSG00000237984", "MIMAT0000076")) == true
     }
 }

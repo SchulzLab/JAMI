@@ -13,6 +13,8 @@ import java.util.HashSet;
 import java.util.regex.Pattern;
 import java.util.zip.GZIPInputStream;
 
+import static java.util.Arrays.stream;
+
 /**
  * Created by mlist on 10/24/17.
  */
@@ -31,11 +33,9 @@ public class InteractionData {
         return miRNAs;
     }
 
-    public ArrayList<Triplet> getTriplets() {
-        return triplets;
-    }
+    public HashSet<Triplet> getTriplets() { return triplets; }
 
-    private ArrayList<Triplet> triplets = new ArrayList<>();
+    private HashSet<Triplet> triplets = new HashSet<>();
 
     public InteractionData(){
 
@@ -49,10 +49,12 @@ public class InteractionData {
      * @param skipFirst Skip first row
      * @return ArrayList with all triple from the file
      */
-    private void readTriples(File file, String separator, boolean skipFirst, String selectedGene){
+    private void readTriples(File file, String separator, boolean skipFirst, HashSet<String> selectedGenes){
         Pattern pattern = Pattern.compile(separator);
-        boolean selectedGeneFound = true;
-        if(selectedGene != null) selectedGeneFound = false;
+        HashMap<String, Boolean> selectedGenesFound = new HashMap<>();
+        for(String gene : selectedGenes){
+            selectedGenesFound.put(gene, false);
+        }
 
         try {
             BufferedReader br = readFile(file);
@@ -63,15 +65,15 @@ public class InteractionData {
             line=br.readLine();
             while (line!=null) {
                 String[] entries = pattern.split(line);
-                if((selectedGene != null && entries[0].equals(selectedGene)) || selectedGene == null) {
+                if((selectedGenes != null && selectedGenes.contains(entries[0])) || selectedGenes == null) {
                     Triplet entry = new Triplet(entries);
                     if (!this.triplets.contains(entry)) this.triplets.add(entry);
-                    if(selectedGene != null) selectedGeneFound = true;
+                    if(selectedGenes != null) selectedGenesFound.put(entries[0], true);
                     this.genes.add(entries[0]);
                     this.genes.add(entries[1]);
                     this.miRNAs.add(entries[2]);
                 }
-                if(selectedGene == null) {
+                if(selectedGenes == null) {
                     Triplet reverseEntry = new Triplet(entries[1], entries[0], entries[2]);
                     if (!this.triplets.contains(reverseEntry)) this.triplets.add(reverseEntry);
                 }
@@ -79,7 +81,12 @@ public class InteractionData {
                 line=br.readLine();
             }
             br.close();
-            if(!selectedGeneFound) logger.warn("No miRNA interactions were found for " + selectedGene);
+            selectedGenesFound
+                    .keySet()
+                    .stream()
+                    .filter(gene -> !selectedGenesFound.get(gene))
+                    .forEach(gene -> logger.warn("No miRNA interactions were found for " + gene));
+
 
         } catch (FileNotFoundException e) {
             e.printStackTrace();
@@ -157,59 +164,67 @@ public class InteractionData {
      * of corresponding to genes.
      * miRExpr and geneExpr are initialized with list of gene and miRNA names found in the file.
      */
-    public void readFileInSetFormat(File fileGenesMiRNA, String selectedGene){
+    public void readFileInSetFormat(File fileGenesMiRNA, HashSet<String> selectedGenes, boolean restricted){
         HashMap<String, String[]> genesToMiRNA = geneToMiRNA(fileGenesMiRNA, "\t", ",", true);
 
         this.genes.addAll(genesToMiRNA.keySet());
         HashSet<String> outerLoopGenes;
-        if(selectedGene != null){
-            outerLoopGenes = new HashSet<>();
-            outerLoopGenes.add(selectedGene);
+        HashSet<String> innerLoopGenes;
+        if(selectedGenes != null){
+            outerLoopGenes = selectedGenes;
         }
         else{
             outerLoopGenes = genes;
         }
 
+        //if one gene is selected, consider all other genes as targets
+        if(selectedGenes != null && restricted){
+            innerLoopGenes = selectedGenes;
+        }
+        else{
+            innerLoopGenes = genes;
+        }
+
         for(String geneA : outerLoopGenes) {
 
             if(genesToMiRNA.get(geneA) == null){
-                logger.warn("No miRNA interactions were found for " + selectedGene);
+                logger.warn("No miRNA interactions were found for " + selectedGenes);
                 continue;
             }
-            for (String geneB : genes) {
+            for (String geneB : innerLoopGenes) {
                 if(geneA.equals(geneB)) continue;
 
-                HashSet<String> miRNAsA =
-                        new HashSet<>(Arrays.asList(genesToMiRNA.get(geneA)));
+                Object[] sharedMirs = Arrays.stream(genesToMiRNA.get(geneA))
+                        .filter(x -> Arrays.stream(genesToMiRNA.get(geneB)).anyMatch(y -> y.equals(x)))
+                        .toArray();
 
-                HashSet<String> miRNAsB =
-                        new HashSet<>(Arrays.asList(genesToMiRNA.get(geneB)));
-
-                miRNAsA.retainAll(miRNAsB); //miRNAsA contains only shared miRNAs
-                this.miRNAs.addAll(miRNAsA);
-
-                for (String miR : miRNAsA) {
+                for(Object sharedMiR : sharedMirs){
+                    String miR = (String) sharedMiR;
+                    this.miRNAs.add(miR);
                     Triplet triple = new Triplet(geneA, geneB, miR);
-                    if(!this.triplets.contains(triple)) this.triplets.add(triple);
+                    this.triplets.add(triple);
                 }
             }
         }
+    }
+
+    public void readFileInSetFormat(File fileGenesMiRNA) {
+        this.readFileInSetFormat(fileGenesMiRNA, null, false);
+    }
+
+    public void readFileInSetFormat(File fileGenesMiRNA, HashSet<String> selectedGenes){
+        this.readFileInSetFormat(fileGenesMiRNA, selectedGenes, false);
     }
 
     /**
      * Reads file with gene - miRNA interactions in the triple format. Initializes miRExpr and geneExpr with the
      * names of genes and miRNAs found in the file.
      */
-    public void readFileWithTriples(File fileGenesMiRNA, String selectedGene){
-        readTriples(fileGenesMiRNA, "\t", true, selectedGene);
+    public void readFileWithTriples(File fileGenesMiRNA, HashSet<String> selectedGenes){
+        readTriples(fileGenesMiRNA, "\t", true, selectedGenes);
     }
 
-    public void filterByGene(String selectedGene) {
-        ArrayList<Triplet> retainedTriplets = new ArrayList<>();
-        for(Triplet triplet : triplets){
-            if(triplet.getGeneOne().equals(selectedGene))
-                retainedTriplets.add(triplet);
-        }
-        this.triplets = retainedTriplets;
+    public void readFileWithTriples(File fileGenesMiRNA){
+        readTriples(fileGenesMiRNA, "\t", true, null);
     }
 }

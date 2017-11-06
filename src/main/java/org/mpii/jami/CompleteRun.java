@@ -1,6 +1,5 @@
 package org.mpii.jami;
 
-import org.apache.commons.math3.distribution.ChiSquaredDistribution;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.mpii.jami.cmi.Cube;
@@ -10,11 +9,7 @@ import org.mpii.jami.input.ExpressionData;
 import org.mpii.jami.input.InteractionData;
 import org.mpii.jami.model.Triplet;
 import java.io.*;
-import java.text.DecimalFormat;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
@@ -42,12 +37,13 @@ public class CompleteRun{
     private int numberOfThreads = -1;
     private boolean header;
     private double pValueCutoff = 1;
-    private String selectedGene;
+    private HashSet<String> selectedGenes;
     private List<Triplet> triplets;
     private List<Triplet> omittedTriplets;
     private Cube initialCube;
     final int batchSize = 100;
     final double progressMinDiff = 0.01;
+    private boolean restricted = false;
     private NonRepetitiveLogger nonRepetitiveLogger = new NonRepetitiveLogger();
 
     public CompleteRun(File fileGenesMiRNA, File fileGeneExpr, File filemiRExpr, File outputFile,
@@ -65,7 +61,8 @@ public class CompleteRun{
         this.numberOfThreads = (int) settingsManager.get("numberOfThreads");
         this.numberOfPermutations = (int) settingsManager.get("numberOfPermutations");
         this.pValueCutoff = (double) settingsManager.get("pValueCutoff");
-        this.selectedGene = (String) settingsManager.get("selectedGene");
+        this.selectedGenes = (HashSet<String>) settingsManager.get("selectedGenes");
+        this.restricted = (boolean) settingsManager.get("restricted");
     }
 
     public List<Triplet> getTriplets() {
@@ -80,12 +77,13 @@ public class CompleteRun{
         this(fileGenesMiRNA, fileGeneExpr, filemiRExpr, outputFile, new SettingsManager());
     }
 
-    public String getSelectedGene() {
-        return selectedGene;
+    public HashSet<String> getSelectedGenes() {
+        return this.selectedGenes;
     }
 
     public void filterForGene(String selectedGene) {
-        this.selectedGene = selectedGene;
+        this.selectedGenes = new HashSet<>();
+        this.selectedGenes.add(selectedGene);
     }
 
     /**
@@ -102,12 +100,12 @@ public class CompleteRun{
         if(tripleFormat){
             logger.info("Reading CMI candidate file in triplet format.");
 
-            interactions.readFileWithTriples(this.fileGenesMiRNA, selectedGene);
+            interactions.readFileWithTriples(this.fileGenesMiRNA, selectedGenes);
         }
         else{
             logger.info("Reading CMI candidate file in set format.");
 
-            interactions.readFileInSetFormat(this.fileGenesMiRNA, selectedGene);
+            interactions.readFileInSetFormat(this.fileGenesMiRNA, selectedGenes, restricted);
         }
 
         logger.info("" + interactions.getTriplets().size() + " interactions (triplets) selected for processing.");
@@ -270,7 +268,9 @@ public class CompleteRun{
         logger.debug("Writing aggregated gene pairs to output file");
 
         try {
-            fw = new FileWriter(new File(outputFile.getParent() + "aggregated_" + outputFile.getName()));
+            String parent = "";
+            if(outputFile.getParent() != null) parent = outputFile.getParent();
+            fw = new FileWriter(new File(parent + "aggregated_" + outputFile.getName()));
             bw = new BufferedWriter(fw);
             bw.write("Source");
             bw.write(separator);
@@ -302,48 +302,48 @@ public class CompleteRun{
                         stringListMap
                                 .forEach((geneTwo, listOfTriplets) -> {
                                     try {
-                                        bw.write(geneOne);
-                                        bw.write(separator);
-                                        bw.write(geneTwo);
-                                        bw.write(separator);
-                                        bw.write(String.valueOf(listOfTriplets.size()));
-                                        bw.write(separator);
-                                        bw.write(listOfTriplets.stream()
-                                                .map(t -> t.getMiRNA())
-                                                .collect(Collectors.joining("/"))
-                                                );
-                                        bw.write(separator);
-                                        bw.write(String.valueOf(listOfTriplets.stream()
-                                                .mapToDouble(t -> t.getCmi())
-                                                .min().getAsDouble()));
-                                        bw.write(separator);
-                                        bw.write(String.valueOf(listOfTriplets.stream()
-                                                .mapToDouble(t -> t.getCmi())
-                                                .max().getAsDouble()));
-                                        bw.write(separator);
-                                        bw.write(String.valueOf(listOfTriplets.stream()
-                                                .mapToDouble(t -> t.getpValue())
-                                                .min().getAsDouble()));
-                                        bw.write(separator);
-                                        bw.write(String.valueOf(listOfTriplets.stream()
-                                                .mapToDouble(t -> t.getpValue())
-                                                .max().getAsDouble()));
-                                        bw.write(separator);
-                                        bw.write(String.valueOf(listOfTriplets.stream()
-                                                .mapToDouble(t -> t.getpAdjust())
-                                                .min().getAsDouble()));
-                                        bw.write(separator);
-                                        bw.write(String.valueOf(listOfTriplets.stream()
-                                                .mapToDouble(t -> t.getpAdjust())
-                                                .max().getAsDouble()));
-                                        bw.write(separator);
-                                        bw.write(String.valueOf(
-                                                FisherMethod.combinedPValue(
-                                                    listOfTriplets.stream()
-                                                    .map(t -> t.getpAdjust())
-                                                    .collect(Collectors.toList())))
-                                                            + "\n");
-
+                                        double pFisher = FisherMethod.combinedPValue(
+                                                listOfTriplets.stream()
+                                                        .map(t -> t.getpAdjust())
+                                                        .collect(Collectors.toList()));
+                                        if(pFisher > pValueCutoff) {
+                                            bw.write(geneOne);
+                                            bw.write(separator);
+                                            bw.write(geneTwo);
+                                            bw.write(separator);
+                                            bw.write(String.valueOf(listOfTriplets.size()));
+                                            bw.write(separator);
+                                            bw.write(listOfTriplets.stream()
+                                                    .map(t -> t.getMiRNA())
+                                                    .collect(Collectors.joining("/"))
+                                            );
+                                            bw.write(separator);
+                                            bw.write(String.valueOf(listOfTriplets.stream()
+                                                    .mapToDouble(t -> t.getCmi())
+                                                    .min().getAsDouble()));
+                                            bw.write(separator);
+                                            bw.write(String.valueOf(listOfTriplets.stream()
+                                                    .mapToDouble(t -> t.getCmi())
+                                                    .max().getAsDouble()));
+                                            bw.write(separator);
+                                            bw.write(String.valueOf(listOfTriplets.stream()
+                                                    .mapToDouble(t -> t.getpValue())
+                                                    .min().getAsDouble()));
+                                            bw.write(separator);
+                                            bw.write(String.valueOf(listOfTriplets.stream()
+                                                    .mapToDouble(t -> t.getpValue())
+                                                    .max().getAsDouble()));
+                                            bw.write(separator);
+                                            bw.write(String.valueOf(listOfTriplets.stream()
+                                                    .mapToDouble(t -> t.getpAdjust())
+                                                    .min().getAsDouble()));
+                                            bw.write(separator);
+                                            bw.write(String.valueOf(listOfTriplets.stream()
+                                                    .mapToDouble(t -> t.getpAdjust())
+                                                    .max().getAsDouble()));
+                                            bw.write(separator);
+                                            bw.write(String.valueOf(pFisher) + "\n");
+                                        }
                                     } catch (IOException e) {
                                         e.printStackTrace();
                                     }

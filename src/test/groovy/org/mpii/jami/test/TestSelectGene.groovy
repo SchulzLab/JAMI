@@ -17,7 +17,7 @@ class TestSelectGene extends Specification {
     def "test select gene"()
     {
         given:
-        def outputFileName = new File("out/test/test_select_gene_filter.csv")
+        def outputFileName = new File("out/test/test_select_gene_filter.txt")
 
         when:
         CompleteRun completeRun = new CompleteRun(genesMiRNA,fileGeneExpr,filemiRNAExpr, outputFileName)
@@ -30,20 +30,36 @@ class TestSelectGene extends Specification {
         completeRun.tripletsWrittenToDisk == 40
     }
 
-    def "test select gene triplet"()
+    def "test select gene triplets"()
     {
         given:
-        def outputFileName = new File("out/test/test_select_gene_triplet.csv")
+        def outputFileName = new File("out/test/test_select_gene_triplet.txt")
 
         when:
         CompleteRun completeRun = new CompleteRun(genesMiRNA,fileGeneExpr,filemiRNAExpr, outputFileName)
         completeRun.numberOfPermutations = 100
-        completeRun.selectedGene = "ENSG00000110427"
+        completeRun.selectedGenes = ["ENSG00000110427"]
         completeRun.runComputation()
 
         then:
         completeRun.completed == true
         completeRun.tripletsWrittenToDisk == 40
+    }
+
+    def "test select two gene triplets"()
+    {
+        given:
+        def outputFileName = new File("out/test/test_select_gene_triplet.txt")
+
+        when:
+        CompleteRun completeRun = new CompleteRun(genesMiRNA,fileGeneExpr,filemiRNAExpr, outputFileName)
+        completeRun.numberOfPermutations = 100
+        completeRun.selectedGenes = ["ENSG00000110427", "ENSG00000100767"]
+        completeRun.runComputation()
+
+        then:
+        completeRun.completed == true
+        completeRun.tripletsWrittenToDisk == 44
     }
 
     def "test select gene during reading set file"()
@@ -55,7 +71,7 @@ class TestSelectGene extends Specification {
         when:
         CompleteRun completeRun = new CompleteRun(genesMiRNA,fileGeneExpr,filemiRNAExpr, outputFileName)
         completeRun.numberOfPermutations = 100
-        completeRun.selectedGene = "ENSG00000110427"
+        completeRun.selectedGenes = ["ENSG00000110427"]
         completeRun.tripleFormat = false
         completeRun.runComputation()
 

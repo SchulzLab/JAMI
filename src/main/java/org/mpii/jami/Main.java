@@ -6,11 +6,14 @@ import org.apache.logging.log4j.Logger;
 import org.kohsuke.args4j.Argument;
 import org.kohsuke.args4j.CmdLineParser;
 import org.kohsuke.args4j.Option;
+import org.kohsuke.args4j.spi.StringArrayOptionHandler;
 import org.mpii.jami.helpers.SettingsManager;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
 
 /**
  * Created by fuksova on 10/7/15.
@@ -54,8 +57,12 @@ public class Main {
     @Option(name="-pcut",usage="optional Benjamini Hochberg adjusted p-value cutoff")
     double pValueCutoff = 1.0;
 
-    @Option(name="-gene",usage="filter for miRNA triplets with this gene as regulator")
-    String gene;
+    @Option(name="-genes", handler = StringArrayOptionHandler.class, usage="filter for miRNA triplets with this gene as regulator")
+    List<String> genes;
+
+    @Option(name="-restricted",usage="set this option to restrict analysis to interactions between the selected gene")
+    boolean restricted = false;
+
 
     /**
      * Uncomment one of the options
@@ -75,6 +82,10 @@ public class Main {
         try {
             parser.parseArgument(args);
 
+            if(parser.getArguments().size() != 3){
+                throw new IOException("ERROR: number of arguments does not match");
+            }
+
             if(fileGeneExpr == null || !fileGeneExpr.exists()){
                 throw new IOException("ERROR: no gene expression file provided");
             }
@@ -91,6 +102,10 @@ public class Main {
                 throw new IllegalArgumentException("p-value cutoff -pcut has to be between 0 and 1.");
             }
 
+            if(!setFormat && restricted){
+                throw new IllegalArgumentException("restricted option is only valid for the set input format.");
+            }
+
             HashMap<String, Object> settings = new HashMap<>();
             settings.put("header", !noheader);
             settings.put("method", method);
@@ -99,7 +114,8 @@ public class Main {
             settings.put("numberOfThreads", numberOfThreads);
             settings.put("numberOfPermutations", numberOfPermutations);
             settings.put("pValueCutoff", pValueCutoff);
-            settings.put("selectedGene", gene);
+            settings.put("selectedGenes", new HashSet<>(genes));
+            settings.put("restricted", restricted);
             SettingsManager settingsManager = new SettingsManager(settings);
 
             CompleteRun completeRun = new CompleteRun(genesMiRNA,fileGeneExpr,filemiRNAExpr,outputFile, settingsManager);
