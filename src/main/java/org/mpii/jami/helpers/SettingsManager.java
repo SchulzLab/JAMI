@@ -19,6 +19,8 @@ public class SettingsManager {
         settings.put("numberOfThreads", -1);
         settings.put("numberOfPermutations", 1000);
         settings.put("pValueCutoff", 1.0);
+        settings.put("selectedGenes", null);
+        settings.put("restricted", false);
     }
 
     public SettingsManager(HashMap<String, Object> settings){

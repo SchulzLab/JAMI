@@ -6,8 +6,11 @@
 
     <groupId>MPI</groupId>
     <artifactId>JAMI</artifactId>
-    <version>1.0-SNAPSHOT</version>
-
+    <version>1.0</version>
+    <properties>
+        <maven.build.timestamp.format>dd.MM.yy_HH:mm</maven.build.timestamp.format>
+        <buildNumber>${maven.build.timestamp}</buildNumber>
+    </properties>
     <build>
         <plugins>
             <plugin>
@@ -27,6 +30,12 @@
                 </configuration>
             </plugin>
         </plugins>
+        <resources>
+            <resource>
+                <directory>src/main/resources</directory>
+                <filtering>true</filtering>
+            </resource>
+        </resources>
     </build>
 
     <dependencies>

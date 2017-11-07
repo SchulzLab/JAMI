@@ -10,10 +10,12 @@ import org.kohsuke.args4j.spi.StringArrayOptionHandler;
 import org.mpii.jami.helpers.SettingsManager;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Properties;
 
 /**
  * Created by fuksova on 10/7/15.
@@ -63,6 +65,12 @@ public class Main {
     @Option(name="-restricted",usage="set this option to restrict analysis to interactions between the selected gene")
     boolean restricted = false;
 
+    @Option(name="-v", usage="report JAMI version")
+    boolean showVersion;
+
+    @Option(name="-h", usage="show this usage information")
+    boolean showHelp;
+
 
     /**
      * Uncomment one of the options
@@ -81,6 +89,23 @@ public class Main {
 
         try {
             parser.parseArgument(args);
+
+            if(showHelp){
+                System.out.println("You may find a detailed documentation at http://jami.readthedocs.io/en/latest/index.html");
+                System.out.println("JAMI USAGE:");
+                System.out.println("java JAMI [options...] gene_expression_file mir_expression_file gene_mir_interactions");
+                parser.printUsage(System.out);
+                System.exit(0);
+            }
+
+            if (showVersion) {
+                Properties prop = new Properties();
+                ClassLoader classLoader = getClass().getClassLoader();
+                prop.load(classLoader.getResourceAsStream("config.properties"));
+                System.out.println("JAMI " + prop.getProperty("version") + " (BUILD " + prop.getProperty("build") + ")");
+                System.exit(0);
+            }
+
 
             if(parser.getArguments().size() != 3){
                 throw new IOException("ERROR: number of arguments does not match");

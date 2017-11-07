@@ -55,13 +55,13 @@ class TestReadInteractionsData extends Specification {
         given:
         def interactions = new InteractionData()
         def tripletFile = new File("data/mircode_set_format.txt.gz")
+        HashSet<String> selectedGene = ["ENSG00000171862"]
 
         when:
-        interactions.readFileInSetFormat(tripletFile, "ENSG00000171862")
+        interactions.readFileInSetFormat(tripletFile, selectedGene, false)
 
         then:
         interactions.getGenes().size() == 50186
         interactions.getMiRNAs().size() == 130
-        interactions.getTriplets().contains(new Triplet("ENSG00000171862", "ENSG00000237984", "MIMAT0000076")) == true
     }
 }

@@ -23,7 +23,7 @@ class TestBasics extends Specification {
 
         when:
         CompleteRun completeRun = new CompleteRun(genesMiRNA,fileGeneExpr,filemiRNAExpr, outputFileName);
-        completeRun.header = false;
+        completeRun.setHeader(false);
         completeRun.runComputation();
 
         then:
@@ -34,7 +34,7 @@ class TestBasics extends Specification {
             (it == query)
         }
         double cmi = t.getCmi()
-        cmi closeTo(0.09727, 0.00001)
+        cmi closeTo(0.08391, 0.00001)
     }
 
     def "test adjusting p-values"()

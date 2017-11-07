@@ -65,6 +65,78 @@ public class CompleteRun{
         this.restricted = (boolean) settingsManager.get("restricted");
     }
 
+    public String getSeparator() {
+        return separator;
+    }
+
+    public void setSeparator(String separator) {
+        this.separator = separator;
+    }
+
+    public int getNumberOfPermutations() {
+        return numberOfPermutations;
+    }
+
+    public void setNumberOfPermutations(int numberOfPermutations) {
+        this.numberOfPermutations = numberOfPermutations;
+    }
+
+    public boolean isTripleFormat() {
+        return tripleFormat;
+    }
+
+    public void setTripleFormat(boolean tripleFormat) {
+        this.tripleFormat = tripleFormat;
+    }
+
+    public String getMethod() {
+        return method;
+    }
+
+    public void setMethod(String method) {
+        this.method = method;
+    }
+
+    public int getNumberOfBins() {
+        return numberOfBins;
+    }
+
+    public void setNumberOfBins(int numberOfBins) {
+        this.numberOfBins = numberOfBins;
+    }
+
+    public int getNumberOfThreads() {
+        return numberOfThreads;
+    }
+
+    public void setNumberOfThreads(int numberOfThreads) {
+        this.numberOfThreads = numberOfThreads;
+    }
+
+    public boolean isHeader() {
+        return header;
+    }
+
+    public void setHeader(boolean header) {
+        this.header = header;
+    }
+
+    public double getpValueCutoff() {
+        return pValueCutoff;
+    }
+
+    public void setpValueCutoff(double pValueCutoff) {
+        this.pValueCutoff = pValueCutoff;
+    }
+
+    public boolean isRestricted() {
+        return restricted;
+    }
+
+    public void setRestricted(boolean restricted) {
+        this.restricted = restricted;
+    }
+
     public List<Triplet> getTriplets() {
         return this.triplets;
     }
@@ -205,6 +277,8 @@ public class CompleteRun{
         List<List<Double>> immutableGeneExpression = Collections.unmodifiableList(geneExpr.getExpressionData());
         List<List<Double>> immutableMiRNAExpression = Collections.unmodifiableList(miRExpr.getExpressionData());
 
+        Progressbar.updateProgress(0.0);
+
         List<List<Triplet>> batches = fjpool.submit(() ->
             IntStream.range(0, numberOfBatches)
                     .mapToObj(i -> this.triplets.subList(i*numberOfElementsPerBatch,
@@ -315,7 +389,7 @@ public class CompleteRun{
                                             bw.write(separator);
                                             bw.write(listOfTriplets.stream()
                                                     .map(t -> t.getMiRNA())
-                                                    .collect(Collectors.joining("/"))
+                                                    .collect(Collectors.joining(","))
                                             );
                                             bw.write(separator);
                                             bw.write(String.valueOf(listOfTriplets.stream()

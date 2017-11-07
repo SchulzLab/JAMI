@@ -52,10 +52,11 @@ public class InteractionData {
     private void readTriples(File file, String separator, boolean skipFirst, HashSet<String> selectedGenes){
         Pattern pattern = Pattern.compile(separator);
         HashMap<String, Boolean> selectedGenesFound = new HashMap<>();
-        for(String gene : selectedGenes){
-            selectedGenesFound.put(gene, false);
+        if(selectedGenes != null) {
+            for (String gene : selectedGenes) {
+                selectedGenesFound.put(gene, false);
+            }
         }
-
         try {
             BufferedReader br = readFile(file);
             String line;
