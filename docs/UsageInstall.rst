@@ -234,7 +234,7 @@ For the set input file we offer an additional option -restricted in which only i
   java -jar JAMI.jar 10_genes_gene_expr.txt 10_genes_mir_expr.txt 10_genes_mirna_interactions_triplet_format.txt  -genes ENSG00000106665 ENSG00000110427 -restricted
 
 ===================================================================
-Usecase: A ceRNA network constructed from TCGA breast cancer data
+Use case: A ceRNA network constructed from TCGA breast cancer data
 ===================================================================
 
 Here we consider a real world example of using JAMI for extracting a small ceRNA regulatory network from TCGA breast cancer data. Specifically, we want to reproduce the network between coding and non-coding ceRNAs as shown in `Tay et al., Nature 2014, Figure 1 <https://www.nature.com/nature/journal/v505/n7483/fig_tab/nature12986_F1.html>`_. There, the authors considered the following genes:
