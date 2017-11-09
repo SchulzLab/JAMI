@@ -7,6 +7,7 @@ import org.kohsuke.args4j.Argument;
 import org.kohsuke.args4j.CmdLineParser;
 import org.kohsuke.args4j.Option;
 import org.kohsuke.args4j.spi.StringArrayOptionHandler;
+import org.mpii.jami.helpers.HelpOptionHandler;
 import org.mpii.jami.helpers.SettingsManager;
 
 import java.io.File;
@@ -28,7 +29,8 @@ public class Main {
     File outputFile = new File("JAMI_CMI_results.txt");
 
     @Option(name="-set",usage="set if set notation should be used " +
-            "as opposed to defining individual triplets to be tested")
+            "as opposed to defining individual triplets to be tested",
+            handler = HelpOptionHandler.class)
     boolean setFormat;
 
     @Argument(index = 2,usage="file defining possible interactions between genes and miRNAs (set format use -set) or " +
@@ -56,7 +58,8 @@ public class Main {
     @Option(name="-batch",usage="number of triplets in each batch. affects overhead of multi-threaded computation")
     int batchSize = SettingsManager.defaultBatchSize;
 
-    @Option(name="-noheader",usage="set this option if the input expression files have no headers")
+    @Option(name="-noheader",usage="set this option if the input expression files have no headers",
+            handler = HelpOptionHandler.class)
     boolean noheader = false;
 
     @Option(name="-pcut",usage="optional Benjamini Hochberg adjusted p-value cutoff")
@@ -65,16 +68,20 @@ public class Main {
     @Option(name="-genes", handler = StringArrayOptionHandler.class, usage="filter for miRNA triplets with this gene or these genes as regulator")
     List<String> genes;
 
-    @Option(name="-restricted",usage="set this option to restrict analysis to interactions between the selected genes")
+    @Option(name="-restricted",usage="set this option to restrict analysis to interactions between the selected genes",
+            handler = HelpOptionHandler.class)
     boolean restricted = false;
 
-    @Option(name="-v", usage="show JAMI version")
+    @Option(name="-v", usage="show JAMI version",
+            handler = HelpOptionHandler.class)
     boolean showVersion;
 
-    @Option(name="-h", usage="show this usage information")
+    @Option(name="-h", usage="show this usage information",
+            handler = HelpOptionHandler.class)
     boolean showHelp;
 
-    @Option(name="-verbose", usage="show verbose error messages")
+    @Option(name="-verbose", usage="show verbose error messages",
+            handler = HelpOptionHandler.class)
     boolean verboseLogging = false;
 
     /**
@@ -160,7 +167,7 @@ public class Main {
                 logger.error("DETAILS:", e);
             }
             System.out.println("JAMI USAGE:");
-            System.out.println("java JAMI [options...] gene_expression_file mir_expression_file gene_mir_interactions");
+            System.out.println("java -jar JAMI [options...] gene_expression_file mir_expression_file gene_mir_interactions [options...]");
             parser.printUsage(System.out);
             System.out.println();
 

@@ -2,13 +2,17 @@
 General Description
 ===================
 
-JAMI is a tool to compute Conditional Mutual Information (CMI)
+JAMI is a tool to for the fast computation of conditional mutual information (CMI). While mutual information quantifies how much one random variable can tell us about another one, conditional mutual information expands on this by quantifying how much one random variable can tell us about another one given a third. 
 
+CMI is thus be defined as:
 
-Defintion of CMI
------------------------------------------------
+.. math:: 
+  I(X;Y|Z)  & =  \mathbb E_Z \big(I(X;Y)|Z\big)
+          & =  \sum_{z\in Z} p_Z(z) \sum_{y\in Y} \sum_{x\in X} p_{X,Y|Z}(x,y|z) \log \frac{p_{X,Y|Z}(x,y|z)}{p_{X|Z}(x|z)p_{Y|Z}(y|z)}
 
-CMI is defined ....
+The ceRNA hypothesis proposed by Salmena et al. [Salmena2011]_ suggests that mRNA transcript are in competition over a limited pool of miRNAs they share binding sites for. A competing endogenous RNA is thus a mRNA that excerts regulatory control over the expression of other mRNAs (coding or non-coding genes) via miRNAs. To quantify the regulatory effect of one gene (the modulator) over another gene (the target) via a specific miRNA, Sumazin et al. [Sumazin2011]_ proposed the use of conditional mutual information, which was implemented as part of the CUPID software [Chiu2015]_ which was implemented in Matlab. In JAMI, we implement a similar strategy with the aim of speeding up the computation of CMI to a level that permits large-scale computations of thousands of such interactions in reasonable time.
+
+Analogous to CUPID, we use the adaptive paritioning approach proposed by Darbellay and Valeda [Darbellay99]_ to compute CMI values. While several methods exist for estimating mutual information, Darbellay and Valeda demonstrated that their approach showed similar performance compared to parametric alternatives while having the advantage of being applicable to any kind of distribution.
 
 =============
 Installation
@@ -43,34 +47,36 @@ JAMI usage overview:
   FILE            : gene expression data
   FILE            : miRNA expression data
   FILE            : file defining possible interactions between genes and miRNAs
-                   (set format use -set) or triplets of gene-gene-miRNA
-  -genes STRING[] : filter for miRNA triplets with this gene as regulator
-  -h              : show this usage information (default: false)
-  -noheader       : set this option if the input expression files have no
-                   headers (default: false)
+                    (set format use -set) or triplets of gene-gene-miRNA
+  -batch N        : number of triplets in each batch. affects overhead of
+                    multi-threaded computation (default: 100)
+  -genes STRING[] : filter for miRNA triplets with this gene or these genes as
+                    regulator
+  -h              : show this usage information
+  -noheader       : set this option if the input expression files have no headers
   -output FILE    : output file (default: JAMI_CMI_results.txt)
   -pcut N         : optional Benjamini Hochberg adjusted p-value cutoff
-                   (default: 1.0)
+                    (default: 1.0)
   -perm N         : number of permutations for inferring empirical p-values.
-                   defaults to 1000. (default: 1000)
+                    (default: 1000)
   -restricted     : set this option to restrict analysis to interactions between
-                   the selected gene (default: false)
+                    the selected genes
   -set            : set if set notation should be used as opposed to defining
-                   individual triplets to be tested (default: false)
+                    individual triplets to be tested
   -threads N      : number of threads to use. -1 to use one less than the number
-                   of  available CPU cores (default: -1)
-  -v              : show JAMI version (default: false)
-  -verbose        : show verbose error messages (default: false)
+                    of available CPU cores (default: -1)
+  -v              : show JAMI version
+  -verbose        : show verbose error messages
 
-JAMI expect three different arguments for which the order matters.
+JAMI expect three arguments for which the order matters.
 
 1.  The path to a gene expression matrix
 2.  The path to a miRNA expression matrix
 3.  The path to a miRNA interaction file in either set or triplet format 
 
-We will explain what these files look like in section <Input>.
+We will explain what these files look like in section `Input`_.
 
-In addition to the arguments, JAMI also accepts options which are used with a '-', the simplest ones being -v and -h which will show the version of JAMI and the usage options, respectively. Other options will be introduced in the <Examples> section.
+In addition to the arguments, JAMI also accepts options which are used with a '-', the simplest ones being -v and -h which will show the version of JAMI and the usage options, respectively. Other options will be introduced in the `Usage Examples`_ section.
 
 =====
 Input
@@ -227,7 +233,8 @@ For multiple genes and triplet format:
 **NOTE:** When selecting genes only triplets will be generated in which the gene of interest is the modulating entity. The reverse interactions where the selected gene is the target is not considered.
 
 Of course this also works for the set format:
-java -jar JAMI.jar 10_genes_gene_expr.txt 10_genes_mir_expr.txt 10_genes_mirna_interactions_set_format.txt -set  -genes ENSG00000106665 ENSG00000110427
+::
+  java -jar JAMI.jar 10_genes_gene_expr.txt 10_genes_mir_expr.txt 10_genes_mirna_interactions_set_format.txt -set  -genes ENSG00000106665 ENSG00000110427
 
 For the set input file we offer an additional option -restricted in which only interactions betweeen the selected genes are considered:
 ::
@@ -298,6 +305,17 @@ The following plot illustrates the performance gain in single and multi-threaded
 
 **NOTE:** JAMI follows the default of Java 8 for parallel processing and uses one less than the number of available cores. However, users can specify the number of threads used by JAMI with the option -t.
 
-**NOTE:** The processing time strongly depends on the number of permutations produced to infer p-values. The default is 1000 as in CUPID and can be adjusted with option -perm.
+**NOTE:** The processing time strongly depends on the number of permutations produced to infer p-values. The default is 1000 as in CUPID and can be adjusted with option -perm. 
+
+**NOTE:** When computing a large number of permutations for a small number of interactions in multi-threaded mode it is advisable to reduce the batch size with the option -batch. With the default batch size of 100 the work might otherwise be left to a single thread. In contrast, if the number of considered interactions is large it may be helpful to increase the batch size to reduce the overhead of the parallel execution. 
 
 **NOTE:** We only consider step III of the CUPID software tool for a fair comparison. 
+
+===========
+Rerferences
+===========
+
+.. [Salmena2011] Salmena, Leonardo, Laura Poliseno, Yvonne Tay, Lev Kats, and Pier Paolo Pandolfi. "A ceRNA hypothesis: the Rosetta Stone of a hidden RNA language?." Cell 146, no. 3 (2011): 353-358.
+.. [Sumazin2011] Sumazin, Pavel, Xuerui Yang, Hua-Sheng Chiu, Wei-Jen Chung, Archana Iyer, David Llobet-Navas, Presha Rajbhandari et al. "An extensive microRNA-mediated network of RNA-RNA interactions regulates established oncogenic pathways in glioblastoma." Cell 147, no. 2 (2011): 370-381.
+.. [Chiu2015] Chiu, Hua-Sheng, David Llobet-Navas, Xuerui Yang, Wei-Jen Chung, Alberto Ambesi-Impiombato, Archana Iyer, Hyunjae Ryan Kim et al. "Cupid: simultaneous reconstruction of microRNA-target and ceRNA networks." Genome research 25, no. 2 (2015): 257-267. 
+.. [Darbellay99] Darbellay, Georges A., and Igor Vajda. "Estimation of the information by an adaptive partitioning of the observation space." IEEE Transactions on Information Theory 45, no. 4 (1999): 1315-1321.
