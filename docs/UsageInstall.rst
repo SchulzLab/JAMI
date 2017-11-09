@@ -2,23 +2,32 @@
 General Description
 ===================
 
-JAMI is a tool to for the fast computation of conditional mutual information (CMI). While mutual information quantifies how much one random variable can tell us about another one, conditional mutual information expands on this by quantifying how much one random variable can tell us about another one given a third. 
+The ceRNA hypothesis proposed by Salmena et al. [Salmena2011]_ suggests that mRNA transcript are in competition over a limited pool of miRNAs they share binding sites for. A competing endogenous RNA is thus a mRNA that excerts regulatory control over the expression of other mRNAs (coding or non-coding genes) via draining them of repressive miRNAs. To quantify the regulatory effect of one gene (the modulator) over another gene (the target) via a specific miRNA, Sumazin et al. [Sumazin2011]_ proposed the use of conditional mutual information, which was implemented as part of the CUPID software [Chiu2015]_ implemented in Matlab. Here we present JAMI, a tool we implemented in Java with the aim of speeding up the computation of CMI to a level that permits large-scale computations of thousands of such interactions in reasonable time.
 
-CMI is thus be defined as:
+Conditional Mutual Information
+------------------------------
 
-.. math:: 
-  I(X;Y|Z)  & =  \mathbb E_Z \big(I(X;Y)|Z\big)
-          & =  \sum_{z\in Z} p_Z(z) \sum_{y\in Y} \sum_{x\in X} p_{X,Y|Z}(x,y|z) \log \frac{p_{X,Y|Z}(x,y|z)}{p_{X|Z}(x|z)p_{Y|Z}(y|z)}
+While mutual information quantifies how much one random variable can tell us about another one, conditional mutual information expands on this by quantifying how much one random variable can tell us about another one given a third. 
 
-The ceRNA hypothesis proposed by Salmena et al. [Salmena2011]_ suggests that mRNA transcript are in competition over a limited pool of miRNAs they share binding sites for. A competing endogenous RNA is thus a mRNA that excerts regulatory control over the expression of other mRNAs (coding or non-coding genes) via miRNAs. To quantify the regulatory effect of one gene (the modulator) over another gene (the target) via a specific miRNA, Sumazin et al. [Sumazin2011]_ proposed the use of conditional mutual information, which was implemented as part of the CUPID software [Chiu2015]_ which was implemented in Matlab. In JAMI, we implement a similar strategy with the aim of speeding up the computation of CMI to a level that permits large-scale computations of thousands of such interactions in reasonable time.
+Mutual information can be defined for discrete random variables :math:`X`, :math:`Y` as the difference in entropy.
 
-Analogous to CUPID, we use the adaptive paritioning approach proposed by Darbellay and Valeda [Darbellay99]_ to compute CMI values. While several methods exist for estimating mutual information, Darbellay and Valeda demonstrated that their approach showed similar performance compared to parametric alternatives while having the advantage of being applicable to any kind of distribution.
+.. math::
+  I(X;Y) = H(X) + H(Y) - H(X,Y).
+
+This notion can be extended for CMI like this:
+
+.. math::
+  I(X;Y|Z) = H(X,Z) + H(Y,Z) - H(X,Y,Z) - H(Z).
+
+where Z is a candidate gene regulating X via miRNA Z. 
+
+Analogous to CUPID, we use the adaptive paritioning approach proposed by Darbellay and Valeda [Darbellay99]_ to compute CMI values via estimating the entropies. While several methods exist for estimating mutual information, Darbellay and Valeda demonstrated that their approach showed similar performance compared to parametric alternatives while having the advantage of being applicable to any kind of distribution. Darbellay and Valeda show that the mutual information of :math:`X` and :math:`Y` can be computed by recursively splitting :math:`X x Y` into four smaller rectangles until the squares are balanced, i.e. until conditional independence is achieved. In CUPID and JAMI this is extended to splitting cubes :math:`X x Y x Z` into eight smaller cubes until balance is achieved. The contribution of the individual small cubes is then summed up to obtain the final estimation of the CMI value. See [Darbellay99]_ for details.
 
 =============
 Installation
 =============
 
-JAMI is implemented in java and thus requires an installation of `Java 1.8 <http://www.oracle.com/technetwork/java/javase/downloads/jre8-downloads-2133155.html>`_ or higher. The advantage of Java is that applications are executed in a virtual machine on any modern operating system such as Windows, MacOS or a Linux derivative such as Ubuntu. You can briefly check if the correct java version is already installed on your computer via 
+JAMI is implemented in Java and thus requires an installation of `Java 1.8 <http://www.oracle.com/technetwork/java/javase/downloads/jre8-downloads-2133155.html>`_ or higher. The advantage of Java is that applications are executed in a virtual machine on any modern operating system such as Windows, MacOS or a Linux derivative such as Ubuntu. You can briefly check if the correct java version is already installed on your computer via 
 ::
   java -version
 
@@ -274,7 +283,39 @@ miRcode in JAMI set format
 
 **NOTE:** You do no need to decompress this file. As mentioned before, JAMI can handle gzip compressed files automatically.
 
-TODO CONTINUE HERE
+**NOTE** The TCGA data uses the version number of the ensembl gene ids whereas the mircode data uses the unversioned ids. Interested users thus need to be careful to omit the last part of the gene id, e.g. ENSG00000100767.5 would be ENSG00000100767).
+
+We next process these data with JAMI to understand how many miRNAs are involved in the cross-talk of these well-known ceRNAs in breast cancer.
+
+::
+  java -jar JAMI.jar \
+  breast_invasive_carcinoma_cancer_gene_expr.txt.gz \
+  breast_invasive_carcinoma_cancer_mir_expr.txt.gz \
+  mircode_set_format.txt.gz \
+  -genes ENSG00000237984 \
+  ENSG00000101558 \
+  ENSG00000138767 \
+  ENSG00000171862 \
+  ENSG00000169554 \
+  ENSG00000038427 \
+  ENSG00000174059 \
+  ENSG00000139687 \
+  ENSG00000115414 \
+  ENSG00000070831 \
+  ENSG00000026508 \
+  ENSG00000108821 \
+  -set -restricted \
+  -output JAMI_BRCA_PTEN_network.txt \
+  -pcut 0.01 \
+  -perm 10000
+
+On our 64 core compute server this took only a few minutes to complete even though we increased the number of permutations to 10,000 to obtain a better p-value estimation.
+
+The result file can now be used for further research about ceRNA interactions. Here, we show that the result file can be directly imported in `Cytoscape <http://www.cytoscape.org/>`_, a popular tool for network analysis without further steps. Start up Cytoscape and either click on 'import network from file' in the startup screen or click on File -> Import -> Network -> File... to get to the following screen:
+
+.. image:; _static/cytoscape_import.png
+
+Here, all column types are inferred correctly and automatically such that you should press OK.
 
 =====================================
 Performance and Advantages over CUPID
