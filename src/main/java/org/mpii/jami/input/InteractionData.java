@@ -64,6 +64,10 @@ public class InteractionData {
                 br.readLine();
             }
             line=br.readLine();
+
+            if(pattern.split(line).length == 2) throw new IOException("In triplet format three columns are expected. " +
+                    "Is this file in set format? Use -set option int this case");
+            if(pattern.split(line).length != 3) throw new IOException("In triplet format three columns are expected.");
             while (line!=null) {
                 String[] entries = pattern.split(line);
                 if((selectedGenes != null && selectedGenes.contains(entries[0])) || selectedGenes == null) {
@@ -90,9 +94,9 @@ public class InteractionData {
 
 
         } catch (FileNotFoundException e) {
-            e.printStackTrace();
+            logger.error("Triplet file not found", e);
         } catch (IOException e) {
-            e.printStackTrace();
+            logger.error("IO error reading triplet file", e);
         }
     }
 
@@ -128,6 +132,11 @@ public class InteractionData {
             BufferedReader br = readFile(file);
 
             String line=br.readLine();
+
+            if(pattern.split(line).length == 3) throw new IOException("In set format three columns are expected. " +
+                    "Is this file in triplet format? Remove -set option in this case");
+            if(pattern.split(line).length != 2) throw new IOException("In set format two columns are expected.");
+
             while (line!=null) {
                 if(skipFirst){
                     line = br.readLine();
@@ -151,9 +160,9 @@ public class InteractionData {
             br.close();
 
         } catch (FileNotFoundException e) {
-            e.printStackTrace();
+            logger.error("Set file not found", e);
         } catch (IOException e) {
-            e.printStackTrace();
+            logger.error("IO error reading set file", e);
         }
 
         return genesWithMiRNA;

@@ -8,19 +8,24 @@ import java.util.HashMap;
 public class SettingsManager {
 
     private HashMap<String, Object> settings;
+    public static final int defaultBatchSize = 100;
+    public static final int defaultPermutations = 1000;
+    public static final String defaultMethod = "";
+    public static final int defaultThreads = -1;
 
     public SettingsManager(){
         this.settings = new HashMap<>();
 
         settings.put("header", true);
-        settings.put("method", "");
+        settings.put("method", defaultMethod);
         settings.put("numberOfBins", 0);
         settings.put("tripleFormat", true);
-        settings.put("numberOfThreads", -1);
-        settings.put("numberOfPermutations", 1000);
+        settings.put("numberOfThreads", defaultThreads);
+        settings.put("numberOfPermutations", defaultPermutations);
         settings.put("pValueCutoff", 1.0);
         settings.put("selectedGenes", null);
         settings.put("restricted", false);
+        settings.put("batchSize", defaultBatchSize);
     }
 
     public SettingsManager(HashMap<String, Object> settings){
