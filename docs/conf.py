@@ -147,10 +147,13 @@ latex_elements = {
 # (source start file, target name, title,
 #  author, documentclass [howto, manual, or own class]).
 latex_documents = [
-    (master_doc, 'JAMI.tex', 'JAMI Documentation',
-     'Markus List and Marcel Schulz', 'manual'),
+    (master_doc, 'JAMI.tex', 'JAMI Supplemental Material',
+     'Andrea Hornakova, Markus List, Jilles Vreeken, Marcel Schulz', 'manual'),
 ]
 
+latex_elements = {
+  'classoptions': ',openany,oneside'
+}
 
 # -- Options for manual page output ---------------------------------------
 
@@ -168,8 +171,8 @@ man_pages = [
 # (source start file, target name, title, author,
 #  dir menu entry, description, category)
 texinfo_documents = [
-    (master_doc, 'JAMI', 'JAMI Documentation',
-     author, 'JAMI', 'One line description of project.',
+    (master_doc, 'JAMI', 'JAMI Supplemental Material',
+     author, 'JAMI', 'Fast computation of conditional mutual information for ceRNA network inference.',
      'Miscellaneous'),
 ]
 
