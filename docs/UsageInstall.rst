@@ -253,7 +253,7 @@ For the set input file we offer an additional option -restricted in which only i
 Use case: A ceRNA network constructed from TCGA breast cancer data
 ===================================================================
 
-Here we consider a real world example of using JAMI for extracting a small ceRNA regulatory network from TCGA breast cancer data. Specifically, we want to reproduce the network between coding and non-coding ceRNAs as shown in `Tay et al., Nature 2014, Figure 1 <https://www.nature.com/nature/journal/v505/n7483/fig_tab/nature12986_F1.html>`_. There, the authors considered the following genes:
+Here we consider a real world example of using JAMI for extracting a small ceRNA regulatory network from TCGA breast cancer data. Specifically, we want to reproduce the network between coding and non-coding ceRNAs as shown in `Figure 1 <https://www.nature.com/nature/journal/v505/n7483/fig_tab/nature12986_F1.html>`_ of [Tay2014]_. There, the authors considered the following genes:
 
 - PTENP1
 - PTEN
@@ -285,7 +285,7 @@ miRcode in JAMI set format
 
 **NOTE** The TCGA data uses the version number of the ensembl gene ids whereas the mircode data uses the unversioned ids. Interested users thus need to be careful to omit the last part of the gene id, e.g. ENSG00000100767.5 would be ENSG00000100767).
 
-We next process these data with JAMI to understand how many miRNAs are involved in the cross-talk of these well-known ceRNAs in breast cancer.
+We next process these data with JAMI to understand how many miRNAs are involved in the cross-talk of these well-known ceRNAs in breast cancer. The following command will compute CMI values and p-values for approximately 10,000 interactions (triplets).
 
 ::
   java -jar JAMI.jar \
@@ -309,25 +309,43 @@ We next process these data with JAMI to understand how many miRNAs are involved 
   -pcut 0.01 \
   -perm 10000
 
-On our 64 core compute server this took only a few minutes to complete even though we increased the number of permutations to 10,000 to obtain a better p-value estimation.
+We increased the number of permutations to 10,000 (default is 1,000) to obtain a better p-value estimation. This means that we computed a total of :math:`10,000^2 = 1e8` CMI values, which took less then 20 minutes on a 64 core compute server.
 
 The result file can now be used for further research about ceRNA interactions. Here, we show that the result file can be directly imported in `Cytoscape <http://www.cytoscape.org/>`_, a popular tool for network analysis without further steps. Start up Cytoscape and either click on 'import network from file' in the startup screen or click on File -> Import -> Network -> File... to get to the following screen:
 
-.. image:; _static/cytoscape_import.png
+.. figure:: _static/cytoscape_import.png
 
-Here, all column types are inferred correctly and automatically such that you should press OK.
+  Supplemantal Figure 1: Cytoscape import of JAMI network files.
+
+Here, all column types are inferred correctly and automatically such that you should press OK. 
+
+You can decide wether you want to import the :download:`regular <_static/JAMI_BRCA_PTEN_network.txt>` or the :download:`aggregated <_static/JAMI_BRCA_PTEN_network_aggregated.txt>` result file in Cytoscape, both will work. Below we show an example of the aggregated network where we color the edges by the number of miRNAs that are shared between those two genes with a adjusted p-value < 0.01. Gene pairs with few significant interactions are shown in grey, thin lines, whereas orange thick lines indicate that a gene pair shares many miRNAs with significant CMI values. The top interacting ceRNAs seem to be VCAN and ZEB2 with more than 120 shared miRNAs:
+
+.. figure:: _static/tay_et_al_reproduced.png
+
+  Supplemental Figure 2: JAMI inferred ceRNA network for known ceRNAs reported in [Tay2014]_.
+
+We arranged nodes according to the Figure 1 in [Tay2014]_ for facilitating a comparison but it appears that the actual ceRNA network is much denserthan what was established in the literature. Rearranging this plot in a circular fashion makes it a bit easier on the eye:
+
+.. figure:: _static/tay_et_al_circular.png
+  
+  Supplemental Figure 3: The same ceRNA network as in Supplemental Figure 2 with circular layout.
 
 =====================================
 Performance and Advantages over CUPID
 =====================================
 
-JAMI implements conditional mutual information as proposed by Sumazin et al. in their software tool CUPID. The following plot illustrates that JAMI reproduces the CMI values computed by CUPID:
+JAMI implements conditional mutual information as proposed by Sumazin et al. in their software tool CUPID. The following two plots illustrates that JAMI reproduces the CMI values computed by CUPID. 
 
-.. image:: _static/cmi_comparison.png
+.. figure:: _static/cmi_comparison.png
+
+  Supplemental Figure 4: Comparison of CMI values between CUPID and JAMI for a test set of 324 interactions.
 
 As well as the p-values with 1000 permutations:
 
-.. image:: _static/pval_comparison_1000_permutations.png
+.. figure:: _static/pval_comparison_1000_permutations.png
+
+  Supplemental Figure 5: Comparison of p-values between CUPID and JAMI for a test set of 324 interactions.
 
 We propagate the use of JAMI instead of CUPID due to the following advantages:
 
@@ -337,12 +355,9 @@ We propagate the use of JAMI instead of CUPID due to the following advantages:
 - The triplet format further allows for splitting the workload conveniently across a distributed compute infrastructure. 
 - The use of Matlab requires a license whereas JAMI is completly free to use.
 
-The following plot illustrates the performance gain in single and multi-threaded application on two test sets:
+.. figure:: _static/benchmark.png
 
-- A small set of 324 interactions between 10 genes meant to illustrate the performance gain in relation to CUPID.
-- A larger set of 37,098 interactions between 100 genes meant to illustrate the advantage of parallel processing.
-
-.. image:: _static/benchmark.png
+ Supplemental Figure 6: Performance gain in single and multi-threaded application on two test sets. Left: A small set of 324 interactions between 10 genes meant to illustrate the performance gain in relation to CUPID. Right: A larger set of 37,098 interactions between 100 genes meant to illustrate the advantage of parallel processing.
 
 **NOTE:** JAMI follows the default of Java 8 for parallel processing and uses one less than the number of available cores. However, users can specify the number of threads used by JAMI with the option -t.
 
@@ -353,10 +368,11 @@ The following plot illustrates the performance gain in single and multi-threaded
 **NOTE:** We only consider step III of the CUPID software tool for a fair comparison. 
 
 ===========
-Rerferences
+References
 ===========
 
 .. [Salmena2011] Salmena, Leonardo, Laura Poliseno, Yvonne Tay, Lev Kats, and Pier Paolo Pandolfi. "A ceRNA hypothesis: the Rosetta Stone of a hidden RNA language?." Cell 146, no. 3 (2011): 353-358.
 .. [Sumazin2011] Sumazin, Pavel, Xuerui Yang, Hua-Sheng Chiu, Wei-Jen Chung, Archana Iyer, David Llobet-Navas, Presha Rajbhandari et al. "An extensive microRNA-mediated network of RNA-RNA interactions regulates established oncogenic pathways in glioblastoma." Cell 147, no. 2 (2011): 370-381.
 .. [Chiu2015] Chiu, Hua-Sheng, David Llobet-Navas, Xuerui Yang, Wei-Jen Chung, Alberto Ambesi-Impiombato, Archana Iyer, Hyunjae Ryan Kim et al. "Cupid: simultaneous reconstruction of microRNA-target and ceRNA networks." Genome research 25, no. 2 (2015): 257-267. 
 .. [Darbellay99] Darbellay, Georges A., and Igor Vajda. "Estimation of the information by an adaptive partitioning of the observation space." IEEE Transactions on Information Theory 45, no. 4 (1999): 1315-1321.
+.. [Tay2014] Tay, Yvonne, John Rinn, and Pier Paolo Pandolfi. "The multilayered complexity of ceRNA crosstalk and competition." Nature 505, no. 7483 (2014): 344-352.
