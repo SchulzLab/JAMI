@@ -1,6 +1,7 @@
 package org.mpii.jami.test
 
 import org.mpii.jami.CompleteRun
+import spock.lang.Shared
 import spock.lang.Specification
 
 /**
@@ -8,16 +9,38 @@ import spock.lang.Specification
  */
 class TestSelectGene extends Specification {
 
+    @Shared
     def genesMiRNA = new File("data/10_genes_mirna_interactions_triplet_format.txt")
+
+    @Shared
     def fileGeneExpr = new File("data/10_genes_gene_expr.txt")
+
+    @Shared
     def filemiRNAExpr = new File("data/10_genes_mir_expr.txt")
 
-    def test_dir = new File("out/test").mkdir()
+    @Shared
+    File testDir
+
+    def setupSpec(){
+        testDir = new File("out/test/")
+        if (!testDir.exists()) {
+            try {
+                testDir.mkdirs()
+            } catch (SecurityException se) {
+                System.err.println("Could not create test directory.")
+                System.err.println(se.getMessage())
+                testDir = File.createTempDir()
+            }
+        } else if (!testDir.isDirectory()) {
+            System.err.println("Could not create test directory.")
+            testDir = File.createTempDir()
+        }
+    }
 
     def "test select gene"()
     {
         given:
-        def outputFileName = new File("out/test/test_select_gene_filter.txt")
+        def outputFileName = new File(testDir.absolutePath + "/test_select_gene_filter.txt")
 
         when:
         CompleteRun completeRun = new CompleteRun(genesMiRNA,fileGeneExpr,filemiRNAExpr, outputFileName)
@@ -33,7 +56,7 @@ class TestSelectGene extends Specification {
     def "test select gene triplets"()
     {
         given:
-        def outputFileName = new File("out/test/test_select_gene_triplet.txt")
+        def outputFileName = new File(testDir.absolutePath + "/test_select_gene_triplet.txt")
 
         when:
         CompleteRun completeRun = new CompleteRun(genesMiRNA,fileGeneExpr,filemiRNAExpr, outputFileName)
@@ -49,7 +72,7 @@ class TestSelectGene extends Specification {
     def "test select two gene triplets"()
     {
         given:
-        def outputFileName = new File("out/test/test_select_gene_triplet.txt")
+        def outputFileName = new File(testDir.absolutePath + "/test_select_gene_triplet.txt")
 
         when:
         CompleteRun completeRun = new CompleteRun(genesMiRNA,fileGeneExpr,filemiRNAExpr, outputFileName)
@@ -65,7 +88,7 @@ class TestSelectGene extends Specification {
     def "test select gene during reading set file"()
     {
         given:
-        def outputFileName = new File("out/test/test_select_gene_set.csv")
+        def outputFileName = new File(testDir.absolutePath + "/test_select_gene_set.csv")
         def genesMiRNA = new File("data/10_genes_mirna_interactions_set_format.txt")
 
         when:

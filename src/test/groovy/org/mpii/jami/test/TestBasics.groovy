@@ -4,6 +4,7 @@ import org.mpii.jami.CompleteRun
 import org.mpii.jami.helpers.BenjaminiHochberg
 import org.mpii.jami.helpers.FisherMethod
 import org.mpii.jami.model.Triplet
+import spock.lang.Shared
 import spock.lang.Specification
 import static spock.util.matcher.HamcrestMatchers.closeTo
 
@@ -12,14 +13,38 @@ import static spock.util.matcher.HamcrestMatchers.closeTo
  */
 class TestBasics extends Specification {
 
+    @Shared
     def genesMiRNA = new File("data/single_gene_pair_triplets.txt")
+
+    @Shared
     def fileGeneExpr = new File("data/single_gene_pair_gene_expr.txt")
+
+    @Shared
     def filemiRNAExpr = new File("data/single_gene_pair_mir_expr.txt")
+
+    @Shared
+    File testDir
+
+    def setupSpec(){
+        testDir = new File("out/test/")
+        if (!testDir.exists()) {
+            try {
+                testDir.mkdirs()
+            } catch (SecurityException se) {
+                System.err.println("Could not create test directory.")
+                System.err.println(se.getMessage())
+                testDir = File.createTempDir()
+            }
+        } else if (!testDir.isDirectory()) {
+            System.err.println("Could not create test directory.")
+            testDir = File.createTempDir()
+        }
+    }
 
     def "test one gene pair"()
     {
         given:
-        def outputFileName = new File("out/test/test_basics.txt")
+        def outputFileName = new File(testDir.absolutePath + "/test_basics.txt")
 
         when:
         CompleteRun completeRun = new CompleteRun(genesMiRNA,fileGeneExpr,filemiRNAExpr, outputFileName);

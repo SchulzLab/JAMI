@@ -1,6 +1,7 @@
 package org.mpii.jami.test
 
 import org.mpii.jami.CompleteRun
+import spock.lang.Shared
 import spock.lang.Specification
 
 
@@ -9,15 +10,38 @@ import spock.lang.Specification
  */
 class TestParallelizationVsNoParallelizationVsNaive extends Specification {
 
+    @Shared
     def genesMiRNA = new File("data/10_genes_mirna_interactions_triplet_format.txt")
+
+    @Shared
     def fileGeneExpr = new File("data/10_genes_gene_expr.txt")
+
+    @Shared
     def filemiRNAExpr = new File("data/10_genes_mir_expr.txt")
 
-    def test_dir = new File("out/test").mkdir()
+    @Shared
+    File testDir
+
+    def setupSpec(){
+        testDir = new File("out/test/")
+        if (!testDir.exists()) {
+            try {
+                testDir.mkdirs()
+            } catch (SecurityException se) {
+                System.err.println("Could not create test directory.")
+                System.err.println(se.getMessage())
+                testDir = File.createTempDir()
+            }
+        } else if (!testDir.isDirectory()) {
+            System.err.println("Could not create test directory.")
+            testDir = File.createTempDir()
+        }
+    }
+
 
     def "iterative partitioning with 1 core"() {
         given:
-        def outputFileName = new File("out/test/test_triplets_1_core.csv")
+        def outputFileName = new File(testDir.absolutePath + "/test_triplets_1_core.txt")
 
         when:
         CompleteRun completeRun = new CompleteRun(genesMiRNA,fileGeneExpr,filemiRNAExpr, outputFileName)
@@ -31,7 +55,7 @@ class TestParallelizationVsNoParallelizationVsNaive extends Specification {
 
     def "iterative partitioning with 2 cores"() {
         given:
-        def outputFileName = new File("out/test/test_triplets_2_cores.csv")
+        def outputFileName = new File(testDir.absolutePath + "/test_triplets_2_cores.txt")
 
         when:
         CompleteRun completeRun = new CompleteRun(genesMiRNA,fileGeneExpr,filemiRNAExpr, outputFileName);
@@ -45,7 +69,7 @@ class TestParallelizationVsNoParallelizationVsNaive extends Specification {
 
     def "iterative Partitioning -1 cores"() {
         given:
-        def outputFileName = new File("out/test/test_triplets_max_cores.csv")
+        def outputFileName = new File(testDir.absolutePath + "/test_triplets_max_cores.csv")
 
         when:
         CompleteRun completeRun = new CompleteRun(genesMiRNA,fileGeneExpr,filemiRNAExpr, outputFileName);
@@ -58,7 +82,7 @@ class TestParallelizationVsNoParallelizationVsNaive extends Specification {
 
     def "1 core and CUPID implementation"() {
         given:
-        def outputFileName = new File("out/test/test_triplets_cupid.csv")
+        def outputFileName = new File(testDir.absolutePath + "/test_triplets_cupid.csv")
 
         when:
         CompleteRun completeRun = new CompleteRun(genesMiRNA,fileGeneExpr,filemiRNAExpr, outputFileName);
