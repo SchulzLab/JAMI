@@ -1,6 +1,6 @@
 <img src = "https://readthedocs.org/projects/jami/badge/?version=latest"/>
 
-# JAMI
+# JAMI 
 
 JAMI is a Java 8 tool for the fast computation of conditional mutual information from large datasets.
 
