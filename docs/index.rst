@@ -27,9 +27,9 @@ This notion can be extended for CMI like this:
 .. math::
   I(X;Y|Z) = H(X,Z) + H(Y,Z) - H(X,Y,Z) - H(Z).
 
-where Z is a candidate gene regulating X via miRNA Z. 
+where Z is a candidate gene regulating X via miRNA Y. 
 
-Analogous to CUPID, we use the adaptive paritioning approach proposed by Darbellay and Valeda [Darbellay99]_ to compute CMI values via estimating the entropies. While several methods exist for estimating mutual information, Darbellay and Valeda demonstrated that their approach showed similar performance compared to parametric alternatives while having the advantage of being applicable to any kind of distribution. Darbellay and Valeda show that the mutual information of :math:`X` and :math:`Y` can be computed by recursively splitting :math:`X x Y` into four smaller rectangles until the squares are balanced, i.e. until conditional independence is achieved. In CUPID and JAMI this is extended to splitting cubes :math:`X x Y x Z` into eight smaller cubes until balance is achieved. The contribution of the individual small cubes is then summed up to obtain the final estimation of the CMI value. See [Darbellay99]_ for details.
+Analogous to CUPID, we use the adaptive paritioning approach proposed by Darbellay and Valeda [Darbellay99]_ to compute CMI values via estimating the entropies. While several methods exist for estimating mutual information, Darbellay and Valeda demonstrated that their approach showed similar performance compared to parametric alternatives while having the advantage of being applicable to any kind of distribution. Darbellay and Valeda show that the mutual information of :math:`X` and :math:`Y` can be computed by recursively splitting :math:`X * Y` into four smaller rectangles until the squares are balanced, i.e. until conditional independence is achieved. In CUPID and JAMI this is extended to splitting cubes :math:`X * Y * Z` into eight smaller cubes until balance is achieved. The contribution of the individual small cubes is then summed up to obtain the final estimation of the CMI value. See [Darbellay99]_ for details.
 
 =============
 Installation
@@ -276,7 +276,7 @@ Here we consider a real world example of using JAMI for extracting a small ceRNA
 - CD44
 - Col1a1
 
-For our usecase we need the following data sets:
+For our use case we need the following data sets:
 
 TCGA breast cancer gene and miRNA expression data (transcripts per million values obtained from RNA-seq data)
   https://xenabrowser.net/datapages/?cohort=TCGA%20Pan-Cancer%20(PANCAN)
@@ -289,7 +289,7 @@ The miRcode database reports miRNA binding sites per miRNA family such that we f
 miRcode in JAMI set format
  https://raw.githubusercontent.com/SchulzLab/JAMI/master/data/mircode_set_format.txt.gz
 
-**NOTE:** You do no need to decompress this file. As mentioned before, JAMI can handle gzip compressed files automatically.
+**NOTE:** You do no need to decompress this file, as JAMI can handle gzip compressed files automatically.
 
 **NOTE** The TCGA data uses the version number of the ensembl gene ids whereas the mircode data uses the unversioned ids. Interested users thus need to be careful to omit the last part of the gene id, e.g. ENSG00000100767.5 would be ENSG00000100767).
 
@@ -319,7 +319,7 @@ We next process these data with JAMI to understand how many miRNAs are involved 
 
 We increased the number of permutations to 10,000 (default is 1,000) to obtain a better p-value estimation. This means that we computed a total of :math:`10,000^2 = 1e8` CMI values, which took less then 20 minutes on a 64 core compute server.
 
-The result file can now be used for further research about ceRNA interactions. Here, we show that the result file can be directly imported in `Cytoscape <http://www.cytoscape.org/>`_, a popular tool for network analysis without further steps. Start up Cytoscape and either click on 'import network from file' in the startup screen or click on File -> Import -> Network -> File... to get to the following screen:
+The result file can now be used for further research about ceRNA interactions. Here, we show that the result file can be directly imported in `Cytoscape <http://www.cytoscape.org/>`_, a popular tool for network analysis, without further steps. Start up Cytoscape and either click on 'import network from file' in the startup screen or click on File -> Import -> Network -> File... to get to the following screen:
 
 .. figure:: _static/cytoscape_import.png
 
@@ -333,7 +333,7 @@ You can decide wether you want to import the :download:`regular <_static/JAMI_BR
 
   Supplemental Figure 2: JAMI inferred ceRNA network for known ceRNAs reported in [Tay2014]_.
 
-We arranged nodes according to the Figure 1 in [Tay2014]_ for facilitating a comparison but it appears that the actual ceRNA network is much denserthan what was established in the literature. Rearranging this plot in a circular fashion makes it a bit easier on the eye:
+We arranged nodes according to the Figure 1 in [Tay2014]_ for facilitating a comparison but it appears that the actual ceRNA network is much denser than what was established in the literature. Rearranging this plot in a circular fashion makes it a bit easier on the eye:
 
 .. figure:: _static/tay_et_al_circular.png
   
