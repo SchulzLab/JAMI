@@ -1,4 +1,7 @@
-<img src = "https://readthedocs.org/projects/jami/badge/?version=latest"/>
+<p float="left">
+  <img src = "https://travis-ci.org/SchulzLab/JAMI.svg?branch=master"/>
+  <img src = "https://readthedocs.org/projects/jami/badge/?version=latest"/>
+</p>
 
 # JAMI 
 
