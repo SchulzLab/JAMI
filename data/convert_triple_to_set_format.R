@@ -10,7 +10,7 @@ set_format <- foreach(gene = unique(c(
     .combine = rbind) %do%
     {
         data.frame(gene = gene, miRNA = paste(
-            unique(as.character(dplyr::filter(`125_genes_ceRNA_interactions_to_test_in_cupid`,
+            unique(as.chCaracter(dplyr::filter(`125_genes_ceRNA_interactions_to_test_in_cupid`,
                       geneA == gene | geneB == gene)$miRNA)), collapse = ","))
     }
 

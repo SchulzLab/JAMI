@@ -341,7 +341,7 @@ public class CompleteRun{
         }
 
         String parent = "";
-        if(outputFile.getParent() != null) parent = outputFile.getParent();
+        if(outputFile.getParent() != null) parent = outputFile.getParent() + "/";
         String fileName = outputFile.getName();
         String extension = "";
         int pos = fileName.lastIndexOf(".");

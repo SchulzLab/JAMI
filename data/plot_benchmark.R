@@ -16,6 +16,6 @@ ggplot(benchmark,
     labs(shape = "Software", color = "Software",
          x = "Number of threads",
          y = "Time in minutes") +
-    scale_color_manual(c("#FF8C00", "#8A2BE2"))
+    scale_color_manual(values = c("#FF8C00", "#8A2BE2")) +
     scale_x_continuous(trans = "log2", breaks = c(c(1,2,4,8,16)))
 
