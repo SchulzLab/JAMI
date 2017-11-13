@@ -1,7 +1,8 @@
-# JAMI
-Java tool for computing conditional mutual information from large datasets
+<img src = "https://readthedocs.org/projects/jami/badge/?version=latest"/>
 
-This software is currently still under development.
+# JAMI
+
+JAMI is a Java 8 tool for the fast computation of conditional mutual information from large datasets.
 
 # Documentation
 
