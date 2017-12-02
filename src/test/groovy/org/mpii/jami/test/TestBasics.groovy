@@ -1,6 +1,8 @@
 package org.mpii.jami.test
 
 import org.mpii.jami.CompleteRun
+import org.mpii.jami.cmi.Cube
+import org.mpii.jami.helpers.AdditionalComputations
 import org.mpii.jami.helpers.BenjaminiHochberg
 import org.mpii.jami.helpers.FisherMethod
 import org.mpii.jami.model.Triplet
@@ -48,6 +50,7 @@ class TestBasics extends Specification {
 
         when:
         CompleteRun completeRun = new CompleteRun(genesMiRNA,fileGeneExpr,filemiRNAExpr, outputFileName);
+        //completeRun.setMethod("cupid")
         completeRun.setHeader(false);
         completeRun.runComputation();
 
@@ -59,7 +62,7 @@ class TestBasics extends Specification {
             (it == query)
         }
         double cmi = t.getCmi()
-        cmi closeTo(0.08391, 0.00001)
+        cmi closeTo(0.098, 0.00001)
     }
 
     def "test adjusting p-values"()
@@ -87,5 +90,4 @@ class TestBasics extends Specification {
         then:
         metaP closeTo(0.0000123, 0.0000001)
     }
-
 }

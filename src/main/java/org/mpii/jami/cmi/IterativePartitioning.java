@@ -2,6 +2,7 @@ package org.mpii.jami.cmi;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.mpii.jami.helpers.AdditionalComputations;
 import org.mpii.jami.helpers.ComparatorForIndices;
 
 import java.util.*;
@@ -20,9 +21,8 @@ public class IterativePartitioning {
 
     private ArrayList<List<Double>> data; //List of input data for cmi computation, currently works for dimension=3
     private int pointsSize;  //number of data points
-    private int dimension;  //dimension of data, must be 3
-    private int dimCombinat; //2^dimension
-    private double [] magicNumbers; //Magic number used in the original implementation claimed to be chi2 statistics but they are not
+    private double [] chiSquareCutoffs;
+    private boolean considerZeros;
 
     public ArrayList<Integer[]> getInverseSortedIndices() {
         return inverseSortedIndices;
@@ -35,10 +35,19 @@ public class IterativePartitioning {
     private ArrayList<Integer[]> inverseSortedIndices;  //Instead of double values of points their order in every dimension is used for CMI computation
     private ArrayList<Integer[]> sortedIndices;  //indices of points sorted according to their original double value
                         //Usually, only third array from this structure is used.
-    private int [][] combArray;  //in original code called Imm. This array helps to assign correct bound to new cubes
+    private HashMap<Integer, int [][]> combArrays = new HashMap<Integer, int[][]>();  //in original code called Imm. This array helps to assign correct bound to new cubes
 
-    private LinkedList<Cube> usedCubes;  //list of cubes that were used for CMI computation
     private int maxDeep; //Maximal deep of splitting space into cubes
+    private ArrayList<HashSet<Integer>> minimumValues;
+
+
+    public boolean ConsiderZeros() {
+        return considerZeros;
+    }
+
+    public void setConsiderZeros(boolean considerZeros) {
+        this.considerZeros = considerZeros;
+    }
 
     public int getMaxDeep() {
         return maxDeep;
@@ -58,18 +67,16 @@ public class IterativePartitioning {
     public  IterativePartitioning(ArrayList<List<Double>> inputData,boolean[] toRecompute,ArrayList<Integer[]> oldSorted,ArrayList<Integer[]> oldInverse){
         data=inputData;
         pointsSize=inputData.get(0).size();
-        dimension=inputData.size();
-        dimCombinat=(int)Math.pow(2,dimension);
-        magicNumbers= new double[]{0, 7.81, 13.9, 25.0, 42.0};
+        chiSquareCutoffs = new double[]{0, 7.81, 13.9, 25.0, 42.0};
         if(toRecompute==null){
             computeInverseOrders();
         }
         else{
-            computeInverseOrders2(oldSorted,oldInverse,toRecompute);
+            computeInverseOrders2(oldSorted,oldInverse,toRecompute, inputData.size());
         }
-        initCombArray();
+        this.combArrays.put(2, initCombArray(2, 4));
+        this.combArrays.put(3, initCombArray(3, 8));
 
-        usedCubes=new LinkedList<>();
         maxDeep=Integer.MAX_VALUE;
     }
 
@@ -81,15 +88,14 @@ public class IterativePartitioning {
     public IterativePartitioning(ArrayList<Integer[]> sorted,ArrayList<Integer[]> inverse){
         data=null;
         pointsSize=inverse.get(0).length;
-        dimension=inverse.size();
-        dimCombinat=(int)Math.pow(2,dimension);
-        magicNumbers= new double[]{0, 7.81, 13.9, 25.0, 42.0};
+        chiSquareCutoffs = new double[]{0, 7.81, 13.9, 25.0, 42.0};
         this.sortedIndices=sorted;
         this.inverseSortedIndices=inverse;
 
-        usedCubes=new LinkedList<>();
         maxDeep=Integer.MAX_VALUE;
-        initCombArray();
+
+        this.combArrays.put(2, initCombArray(2, 4));
+        this.combArrays.put(3, initCombArray(3, 8));
     }
 
     /**
@@ -125,7 +131,8 @@ public class IterativePartitioning {
      * @param toRecompute toRecompute[i]==true means that i-th coordinate data for inverseSortedIndices and sortedIndices
      *                    should be recomputed. Otherwise, values from oldInverse and oldSorted should be used.
      */
-    private void computeInverseOrders2(ArrayList<Integer[]> oldSorted,ArrayList<Integer[]> oldInverse,boolean[] toRecompute){
+    private void computeInverseOrders2(ArrayList<Integer[]> oldSorted,
+                                       ArrayList<Integer[]> oldInverse,boolean[] toRecompute, int dimension){
         inverseSortedIndices = new ArrayList<>();
         sortedIndices=new ArrayList<>();
         for (int i = 0; i < dimension; i++) {
@@ -162,8 +169,8 @@ public class IterativePartitioning {
         return initialCube;
     }
 
-    private void initCombArray(){
-        combArray =new int[dimCombinat][dimension];
+    private int[][] initCombArray(int dimension, int dimCombinat) {
+        int[][] combArray = new int[dimCombinat][dimension];
         for (int i = 0; i < dimCombinat; i++) {
             int temp = 1;
             for (int j = 0; j < dimension; j++) {
@@ -171,23 +178,25 @@ public class IterativePartitioning {
                 temp = temp * 2;
             }
         }
+        return combArray;
     }
 
     /**
-     * Given a cube and coordinates of its center, create eight new cubes.
+     * Given a cube and coordinates of its center, create 2^dim new hypercubes.
      * @param currentCube cube to be split
      * @param center center of the cube
-     * @return list of eight new cubes
+     * @return list of 2^dim new cubes
      */
     private ArrayList<Cube> getNewCubes(Cube currentCube,int [] center){
 
         int[][] currentCoordinates = currentCube.getCoordinates();
         ArrayList<Cube> newCubes=new ArrayList<>();
+        int dimension = currentCube.getDimensions().length;
 
-        for (int i = 0; i < dimCombinat; i++) {
+        for (int i = 0; i < (int) Math.pow(2, dimension); i++) {
             int [] coordinates=new int[2*dimension];
             for (int j = 0; j < dimension; j++) {
-                if(combArray[i][j]>0){
+                if(combArrays.get(dimension)[i][j]>0){
                     coordinates[2*j]=center[j]+1;
                     coordinates[2*j+1]=currentCoordinates[j][1];
                 }
@@ -197,6 +206,8 @@ public class IterativePartitioning {
                 }
             }
             Cube newCube=new Cube(coordinates,currentCube.getDepth()+1);
+            newCube.setDimensions(currentCube.getDimensions());
+            newCube.setPointsAfterZeroSplit(currentCube.getPointsAfterZeroSplit());
             newCubes.add(newCube);
         }
         return newCubes;
@@ -212,6 +223,7 @@ public class IterativePartitioning {
         Stack<Cube> stack = new Stack<>();
         Cube initialCube=getInitialCube(this.pointsSize);
         stack.push(initialCube);
+        int dimCombinat = (int) Math.pow(2, initialCube.getDimensions().length);
 
         double cmi=0;
         while (!stack.isEmpty()) {
@@ -220,7 +232,7 @@ public class IterativePartitioning {
             int pointsNumber = currentPoints.size();
             int[] center = currentCube.findCenter();
             ArrayList<Cube> newCubes=getNewCubes(currentCube,center);
-
+            int dimension = currentCube.getDimensions().length;
             int[][] J = new int[pointsNumber][dimension];
             for (int i = 0; i < dimension; i++) {
                 Integer[] currentColumn = inverseSortedIndices.get(i);
@@ -255,13 +267,11 @@ public class IterativePartitioning {
                         stack.push(smallCube);
                     }
                     else if(!smallCube.getPoints().isEmpty()){
-                        usedCubes.add(smallCube);
                         cmi+=cmiInCube(smallCube);
                     }
                 }
             }
             else{
-                usedCubes.add(currentCube);
                 cmi+=cmiInCube(currentCube);
             }
 
@@ -277,17 +287,18 @@ public class IterativePartitioning {
     /**
      * Evaluates whether currentCube or its split: newCubes should be used for CMI computation
      * This method is basically not reliable because it incorporates some strange heuristic based for example on
-     * some magic value in magicNumbers[dimension-1] which is claimed to from chi2 statistical table but it is not
+     * some magic value in chiSquareCutoffs[dimension-1] which is claimed to from chi2 statistical table but it is not
      * @param currentCube
      * @param newCubes
      * @return if true, use new Cubes (split), if false, use currentCube (do not split)
      */
-    private boolean useSplit(Cube currentCube,ArrayList<Cube> newCubes){  //Can be implemented as abstract and other classes can extend this
+    private boolean useSplit(Cube currentCube,ArrayList<Cube> newCubes){
         if(currentCube.getDepth()>=maxDeep){
             return false;
         }
-        int pointsNumber=currentCube.getPoints().size();     //Or those methods can be a part of an interface and I could use classes implementing the interface
-        double expected=(double) pointsNumber /dimCombinat;
+        int dimCombinat = (int) Math.pow(2, currentCube.getDimensions().length);
+        int pointsNumber=currentCube.getPoints().size();
+        double expected=(double) pointsNumber / dimCombinat;
         double tst=0;
         for (int i = 0; i < dimCombinat; i++) {
             int size = newCubes.get(i).getPoints().size();
@@ -295,36 +306,21 @@ public class IterativePartitioning {
         }
         tst=dimCombinat*tst/ pointsNumber;
 
-        return (tst>magicNumbers[dimension-1]);
+        return (tst> chiSquareCutoffs[currentCube.getDimension()-1]);
     }
 
     public boolean pushToStack(Cube newCube){
-        return newCube.getPoints().size()>dimCombinat;
+        return newCube.getPoints().size()>Math.pow(2, newCube.getDimension());
     }
-
-
-    /**
-     * for debugging purposes
-     * @param point index of point in data and in inverseSortedIndices
-     * @return returns coordinates of the point, that is order of given point in every dimension
-     */
-    public int[] getPointCoordinates(int point){
-        int[] coordinates=new int[3];
-        coordinates[0]=inverseSortedIndices.get(0)[point];
-        coordinates[1]=inverseSortedIndices.get(1)[point];
-        coordinates[2]=inverseSortedIndices.get(2)[point];
-        return coordinates;
-    }
-
 
     public double cmiInUniformGrid(int numberOfBins){
         int binSize=pointsSize/numberOfBins;
         int rest=pointsSize%numberOfBins;
         int usedNumberOfBins=numberOfBins;
+        int dimension = data.size();
         if(rest>=0.25*binSize&&rest>=2){
             usedNumberOfBins++;
         }
-        TreeMap<Integer,Cube> tmCubes=new TreeMap<>();
         int[] coeffs=new int[dimension];
 
         coeffs[0]=usedNumberOfBins*usedNumberOfBins;
@@ -379,58 +375,44 @@ public class IterativePartitioning {
      * @return CMI value
      */
     public double iterativePartitioningBetter(Cube initialCube){
+
         Stack<Cube> stack = new Stack<>();
-        Stack<TreeNode> stack2 = new Stack<>();
-        TreeNode rootNode=new TreeNode(initialCube);
-        stack2.push(rootNode);
-        stack.push(initialCube);
+
+        if(this.considerZeros) stack = splitCubeWithZeros(initialCube);
+        else stack.push(initialCube);
 
         double cmi=0;
         while (!stack.isEmpty()) {
             Cube currentCube = stack.pop();
-            TreeNode currentNode=stack2.pop();
             ArrayList<Integer> currentPoints = currentCube.getPoints();
             int pointsNumber = currentPoints.size();
             int[] center = currentCube.findCenter();
             ArrayList<Cube> newCubes = getNewCubes(currentCube, center);
             for (int i = 0; i < pointsNumber; i++) {
-                int sum=0;
-                int temp=1;
+                int sum = 0;
+                int temp = 1;
                 Integer pointOrder = currentPoints.get(i);
-                for (int j = 0; j < dimension; j++) {
-                    if(inverseSortedIndices.get(j)[pointOrder]>center[j]) sum+=temp;
+                for(int j = 0; j < currentCube.getDimensions().length; j++) {
+                    if(inverseSortedIndices.get(currentCube.getDimensions()[j])[pointOrder]>center[j]) sum+=temp;
                     temp*=2;
                 }
                 newCubes.get(sum).addPoint(pointOrder);
             }
 
             if(useSplit(currentCube,newCubes)||currentCube.equals(initialCube)){
-                ArrayList<TreeNode> newNodes=new ArrayList<>();
-                for (int i = 0; i < dimCombinat; i++) {
-                    TreeNode tn=new TreeNode(newCubes.get(i));
-                    newNodes.add(tn);
-                }
-                currentNode.reinit(center,newNodes);
-                for (int i = 0; i < dimCombinat; i++) {
+                for (int i = 0; i < (int) Math.pow(2, currentCube.getDimensions().length); i++) {
 
                     Cube smallCube = newCubes.get(i);
                     if (pushToStack(smallCube)){
                         stack.push(smallCube);
-                        stack2.push(newNodes.get(i));
                     }
                     else if(!smallCube.getPoints().isEmpty()){
-                        usedCubes.add(smallCube);
-                        //cmi+=cmiInCube(smallCube);
                         cmi+=cmiInCubeBetter(smallCube);
-                    }
-                    else if(smallCube.getPoints().isEmpty()){
-                        usedCubes.add(smallCube);
                     }
                 }
             }
             else{
                 cmi+=cmiInCubeBetter(currentCube);
-                usedCubes.add(currentCube);
             }
 
 
@@ -440,48 +422,195 @@ public class IterativePartitioning {
         return cmi;
     }
 
+    private Stack<Cube> splitCubeWithZeros(Cube initialCube) {
+
+        Stack<Cube> cubesToConsiderForSplitting = new Stack<>();
+        cubesToConsiderForSplitting.push(initialCube);
+        Stack<Cube> finalCubes = new Stack<>();
+        ArrayList<HashSet<Integer>> minimumValues = new ArrayList<>();
+
+        if(this.data != null) {
+            for (int dim = 0; dim < initialCube.getDimension(); dim++) {
+                minimumValues.add(AdditionalComputations.ranksOfMinimumValues(this.data.get(dim)));
+            }
+            setMinimumValues(minimumValues);
+        } else{
+            minimumValues = getMinimumValues();
+        }
+
+        while(!cubesToConsiderForSplitting.empty()){
+
+            Cube currentCube = cubesToConsiderForSplitting.pop();
+
+            if(currentCube.getDimension() == 1) continue; //currently not handling one dimensional cubes
+
+            boolean noZeros = true;
+
+            //in each dimension we split off a hypercube with zeros which we will flatten to dim - 1 and process further
+            for(int dim : currentCube.getDimensions()) {
+
+                if(dim == currentCube.getDimension()) break; // dimension no longer relevant
+
+                //check which of the points in the current cube are at the minimum value
+                HashSet<Integer> zeroPointsInCube = new HashSet<>(minimumValues.get(dim));
+                zeroPointsInCube.retainAll(currentCube.getPoints());
+
+                if (zeroPointsInCube.size() > 1) { //one value at minimum means no duplicates
+                    if(currentCube.getDimension() == 1) break; //only zeros in this cube, cmi is 0.
+
+                    noZeros = false;
+                    ArrayList<Integer> nonZeroPoints = new ArrayList<>(currentCube.getPoints());
+                    nonZeroPoints.removeAll(zeroPointsInCube);
+
+                    int[][] currentCoordinates = currentCube.cloneCoordinates();
+                    int[][] coordinatesOfZeroCube = new int[currentCube.getDimension() -1][2];
+
+                    // we need to figure out which dimension to ignore in building the square
+                    int newDim = 0;
+                    int[] dimensions = new int[currentCube.getDimension() - 1];
+                    for (int oldDim = 0; oldDim < currentCube.getDimension(); oldDim++) {
+                        if (oldDim != dim) {
+                            coordinatesOfZeroCube[newDim][0] = currentCoordinates[oldDim][0];
+                            coordinatesOfZeroCube[newDim][1] = currentCoordinates[oldDim][1];
+                            dimensions[newDim++] = oldDim;
+                        }
+                    }
+
+                    currentCoordinates[dim][0] = zeroPointsInCube.size();
+
+                    Cube nonZeroCube = new Cube(currentCoordinates, currentCube.getDepth() + 1, currentCube.getDimensions());
+                    Cube zeroCube = new Cube(coordinatesOfZeroCube, currentCube.getDepth() + 1, dimensions);
+
+                    zeroCube.addPoints(zeroPointsInCube);
+                    zeroCube.setPointsAfterZeroSplit(zeroPointsInCube);
+
+                    nonZeroCube.addPoints(nonZeroPoints);
+                    if(nonZeroCube.getDimension() < 3){
+                        HashSet<Integer> lastZeros = new HashSet<>(currentCube.getPointsAfterZeroSplit());
+                        lastZeros.retainAll(nonZeroCube.getPoints());
+                        nonZeroCube.setPointsAfterZeroSplit(lastZeros);
+                    }
+                    cubesToConsiderForSplitting.push(zeroCube);
+
+                    if (nonZeroPoints.size() > 0) currentCube = nonZeroCube;
+                    else break;
+                }
+            }
+
+            if(noZeros) finalCubes.push(currentCube);
+            else if(currentCube.getPoints().size() >0) cubesToConsiderForSplitting.push(currentCube);
+        }
+
+        return finalCubes;
+    }
+
 
     /**
      * Computes CMI in one cube (grid cell) in the same way as in Cupid. The aim was to implement it such that the
      * time complexity is close to original implementation as much as possible
+     *
      * @param cube cube in which we compute CMI
      * @return a value that needs to be divided by pointsSize to obtain the contribution to final CMI value
      */
-    public double cmiInCube(Cube cube){
+    public double cmiInCube(Cube cube) {
+
+        if (cube.getDimensions().length < 3) return (cmiInSquare(cube));
 
         int[][] coordinates = cube.getCoordinates();
         int sizePointsInCube = cube.getPoints().size();
 
-        int nz=coordinates[2][1]-coordinates[2][0]+1;
-        int nxz=0;
-        int nyz=0;
+        int nz = coordinates[2][1] - coordinates[2][0] + 1;
+        int nxz = 0;
+        int nyz = 0;
         double cmi;
         for (int i = 0; i < pointsSize; i++) {
-            int x=inverseSortedIndices.get(0)[i];
-            int y=inverseSortedIndices.get(1)[i];
-            int z=inverseSortedIndices.get(2)[i];
-            if(x>=coordinates[0][0]&&x<=coordinates[0][1]){
-                if(z>=coordinates[2][0]&&z<=coordinates[2][1]){
+            int x = inverseSortedIndices.get(0)[i];
+            int y = inverseSortedIndices.get(1)[i];
+            int z = inverseSortedIndices.get(2)[i];
+            if (x >= coordinates[0][0] && x <= coordinates[0][1]) {
+                if (z >= coordinates[2][0] && z <= coordinates[2][1]) {
                     nxz++;
                 }
             }
-            if(y>=coordinates[1][0]&&y<=coordinates[1][1]){
-                if(z>=coordinates[2][0]&&z<=coordinates[2][1]){
+            if (y >= coordinates[1][0] && y <= coordinates[1][1]) {
+                if (z >= coordinates[2][0] && z <= coordinates[2][1]) {
                     nyz++;
                 }
             }
         }
 
-        double cond=1;
-        if(nxz*nyz>0&&nz*sizePointsInCube>0){
+        double cond = 1;
+        if (nxz * nyz > 0 && nz * sizePointsInCube > 0) {
 
-            cond=((double)nz* sizePointsInCube)/(nxz*nyz);
+            cond = ((double) nz * sizePointsInCube) / (nxz * nyz);
         }
-        cmi=sizePointsInCube*Math.log(cond);
+        cmi = sizePointsInCube * Math.log(cond);
 
         return cmi;
     }
 
+    /**
+     * This function computes the mutual information on a cube, ignoring one of the dimensions.
+     * @param square
+     * @return double mutual information of the cube with one dimension equal to zero (no entropy)
+     */
+    public double cmiInSquare(Cube square){
+
+        int sizePointsInCube = square.getPoints().size();
+        if(sizePointsInCube == 0) return(0);
+
+        int[][] coordinates = square.getCoordinates();
+
+        //find out which of the three dimensions to ignore
+        int firstDim = square.getDimensions()[0];
+        int secondDim = square.getDimensions()[1];
+        int flattenedDim = 3 - firstDim - secondDim;
+
+        int nxz = 0;
+        int nyz = 0;
+
+        double cond = 1;
+
+        //case 1 and 2, x or y have been flattened. the way we compute the new coordinates we can be sure that the
+        //second dimension is always Z in I(X;Y|Z)
+        if(flattenedDim < 2){
+            for (int i = coordinates[1][0]; i <= coordinates[1][1]; i++) {
+                int point = (sortedIndices.get(secondDim)[i]);
+                int x = inverseSortedIndices.get(firstDim)[point];
+                int y = inverseSortedIndices.get(flattenedDim)[point];
+                if(square.getPointsAfterZeroSplit().contains(y)){
+                    nyz++;
+                }
+                if (x >= coordinates[0][0] && x <= coordinates[0][1]) {
+                    nxz++;
+                }
+            }
+            if(nxz > 0)
+                cond = ((double) sizePointsInCube) * (coordinates[1][1] - coordinates[1][0] + 1) /
+                        (nxz * nyz);
+        }
+
+        //case 3, z has been flattened. we consider all points that were included in the initial square since
+        // all those points lie on the z-axis even after further splits.
+        else{
+            for (int i : square.getPointsAfterZeroSplit()) {
+                int x=inverseSortedIndices.get(firstDim)[i];
+                int y=inverseSortedIndices.get(secondDim)[i];
+
+                if(x>=coordinates[0][0]&&x<=coordinates[0][1]){
+                    nxz++;
+                }
+                if(y>=coordinates[1][0]&&y<=coordinates[1][1]){
+                    nyz++;
+                }
+            }
+            if(nxz*nyz > 0)
+                cond = ((double) sizePointsInCube) * ((double) square.getPointsAfterZeroSplit().size()) /(nxz*nyz);
+        }
+        double mi = sizePointsInCube*Math.log(cond);
+
+        return mi;
+    }
 
     /**
      * This is a better version of CMI computation in one cube (grid cell)
@@ -490,11 +619,15 @@ public class IterativePartitioning {
      */
     public double cmiInCubeBetter(Cube cube){
 
+        if (cube.getDimension() < 3) return(cmiInSquare(cube));
+
         int[][] coordinates = cube.getCoordinates();
         int sizePointsInCube = cube.getPoints().size();
         int nz=coordinates[2][1]-coordinates[2][0]+1;
+        if(nz*sizePointsInCube == 0) return(0);
+
         double cond=1;
-        double cmi = 0;
+        double cmi;
 
             int nxz = 0;
             int nyz = 0;
@@ -514,9 +647,9 @@ public class IterativePartitioning {
                 }
             }
 
-         if(nxz*nyz>0&&nz*sizePointsInCube>0){
+         if(nxz*nyz > 0){
 
-                cond = ((double) nz * sizePointsInCube) / (nxz * nyz);  //In a better version the condition that tests against zero could be used earlier to prevent useless computation
+                cond = ((double) nz * sizePointsInCube) / (nxz * nyz);
             }
 
         cmi=sizePointsInCube*Math.log(cond);
@@ -531,7 +664,7 @@ public class IterativePartitioning {
     public void testCube(Cube cube){
         int[][] coordinates = cube.getCoordinates();
         for (Integer point : cube.getPoints()) {
-            for (int i = 0; i < dimension; i++) {
+            for (int i = 0; i < cube.getDimensions().length; i++) {
                 int currentCoordinate=inverseSortedIndices.get(i)[point];
                 if(currentCoordinate<coordinates[i][0]||currentCoordinate>coordinates[i][1]){
                     logger.debug("Error in point split: " +
@@ -563,18 +696,9 @@ public class IterativePartitioning {
                 cmi+=cmiInCube(cube);
             }
 
-
             //maybe bad idea, x and y or such coordinates can be reused in case of randomized one coordinate
             //clever association of points into correct cube then compute cmi in cube
         }
-//        HashSet<Integer> usedPoints=new HashSet<>();
-//        for (Cube cube : cubes) {
-//            testCube(cube);
-//            usedPoints.addAll(cube.getPoints());
-//        }
-//        if(usedPoints.size()!=pointsSize){
-//            System.out.println("Not all points assigned");
-//        }
         cmi=cmi/pointsSize;
         return cmi;
     }
@@ -587,20 +711,8 @@ public class IterativePartitioning {
      */
     public double computeCMIInGrid(TreeNode treeRoot,LinkedList<Cube> cubes){
         double cmi=0;
-//        Stack<TreeNode> stack=new Stack<>();
-//        stack.push(treeRoot);
-//        while(!stack.isEmpty()){
-//            TreeNode tn=stack.pop();
-//            boolean isLeaf=tn.isLeaf;
-//            if(!isLeaf){
-//                for (TreeNode node : tn.nextNodes) {
-//                    stack.push(node);
-//                }
-//            }
-//            else{
-//                tn.cube.getPoints().clear();
-//            }
-//        }
+        int dimension = data.size();
+
         for (Cube cube : cubes) {
             cube.getPoints().clear();
         }
@@ -624,21 +736,7 @@ public class IterativePartitioning {
             currentNode.cube.addPoint(p);
             testCube(currentNode.cube);
         }
-//        stack=new Stack<>();
-//        stack.push(treeRoot);
-//        while(!stack.isEmpty()){
-//            TreeNode tn=stack.pop();
-//            boolean isLeaf=tn.isLeaf;
-//            if(!isLeaf){
-//                for (TreeNode node : tn.nextNodes) {
-//                    stack.push(node);
-//                }
-//            }
-//            else{
-//                //testCube(tn.cube);
-//                cmi+=cmiInCubeBetter(tn.cube);
-//            }
-//        }
+
         for (Cube cube : cubes) {
             cmi+=cmiInCubeBetter(cube);
 
@@ -677,6 +775,11 @@ public class IterativePartitioning {
         return set1;
     }
 
+    public void setMinimumValues(ArrayList<HashSet<Integer>> minimumValues) {
+        this.minimumValues = minimumValues;
+    }
 
-
+    public ArrayList<HashSet<Integer>> getMinimumValues() {
+        return minimumValues;
+    }
 }

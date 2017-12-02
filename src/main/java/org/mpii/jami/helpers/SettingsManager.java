@@ -26,6 +26,7 @@ public class SettingsManager {
         settings.put("selectedGenes", null);
         settings.put("restricted", false);
         settings.put("batchSize", defaultBatchSize);
+        settings.put("considerZeros", true);
     }
 
     public SettingsManager(HashMap<String, Object> settings){

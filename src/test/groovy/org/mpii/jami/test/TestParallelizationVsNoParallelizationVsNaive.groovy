@@ -39,6 +39,21 @@ class TestParallelizationVsNoParallelizationVsNaive extends Specification {
     }
 
 
+    def "iterative partitioning with 1 triplet and 1 core"() {
+        given:
+        def outputFileName = new File(testDir.absolutePath + "/test_triplets_1_core_1_interaction.txt")
+        def genesMiRNA_one = new File("data/10_genes_mirna_interactions_triplet_format_1_triplet.txt")
+
+        when:
+        CompleteRun completeRun = new CompleteRun(genesMiRNA_one,fileGeneExpr,filemiRNAExpr, outputFileName)
+        completeRun.numberOfThreads = 1;
+        completeRun.runComputation();
+
+        then:
+        completeRun.completed == true
+        completeRun.tripletsWrittenToDisk == 4
+    }
+
     def "iterative partitioning with 1 core"() {
         given:
         def outputFileName = new File(testDir.absolutePath + "/test_triplets_1_core.txt")

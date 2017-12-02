@@ -24,16 +24,18 @@ public class CMIComplete{
     double pValue;  //obtained p-value of CMI
     int numPerm; //number of permutations for p-value computation
     private int maxDeep; //maximum depth of iterative partitioning grid split
+    private boolean considerZeros;
 
     /**
      * Initializes data for which CMI is computed
      * @param numPerm Number of permutations for p-value computation
      * @param data input data
      */
-    public CMIComplete(int numPerm,ArrayList<List<Double>> data) {
+    public CMIComplete(int numPerm,ArrayList<List<Double>> data, boolean considerZeros) {
         this.numPerm=numPerm;
         this.origData=data;
         maxDeep=Integer.MAX_VALUE;
+        this.considerZeros = considerZeros;
     }
 
     /**
@@ -75,7 +77,6 @@ public class CMIComplete{
             forPartitioning.add(randomizedData);
             IterativePartitioning ipRand=new IterativePartitioning(forPartitioning);
             randCMI[i]=ipRand.naivePartitioning();
-
         }
         int sum=0;
         for (int i = 0; i < numPerm; i++) {
@@ -96,6 +97,7 @@ public class CMIComplete{
     public void computeIterativePartitioning(Cube initialCube){
         IterativePartitioning ip=new IterativePartitioning(origData);
         ip.setMaxDeep(maxDeep);
+        ip.setConsiderZeros(considerZeros);
         cmi=ip.iterativePartitioningBetter(initialCube);
 
         //code to split permutations into subtasks... we now rather split by triplet for better performance with

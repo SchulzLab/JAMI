@@ -36,6 +36,7 @@ public class CompleteRun{
     private int numberOfBins = 0;
     private int numberOfThreads;
     private boolean header;
+    private boolean considerZeros;
     private double pValueCutoff;
     private HashSet<String> selectedGenes;
     private List<Triplet> triplets;
@@ -64,6 +65,7 @@ public class CompleteRun{
         this.selectedGenes = (HashSet<String>) settingsManager.get("selectedGenes");
         this.restricted = (boolean) settingsManager.get("restricted");
         this.batchSize = (int) settingsManager.get("batchSize");
+        this.considerZeros = (boolean) settingsManager.get("considerZeros");
     }
 
     public String getSeparator() {
@@ -488,7 +490,7 @@ public class CompleteRun{
         data.add(geneCondData);  //this is randomized
         CMIComplete cmiComplete;
 
-        cmiComplete = new CMIComplete(numberOfPermutations, data);
+        cmiComplete = new CMIComplete(numberOfPermutations, data, this.considerZeros);
 
         String method = "default";
         switch(method){

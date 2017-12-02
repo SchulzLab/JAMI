@@ -82,6 +82,8 @@ public class CMIRecursiveTask extends RecursiveTask<Integer> {
         inverse.add(randomizedInverse);
         IterativePartitioning ipRand = new IterativePartitioning(sorted, inverse);
         ipRand.setMaxDeep(ip.getMaxDeep());
+        ipRand.setConsiderZeros(ip.ConsiderZeros());
+        ipRand.setMinimumValues(ip.getMinimumValues());
         return (ipRand.iterativePartitioningBetter(initialCube));
     }
 }
