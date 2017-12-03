@@ -317,7 +317,7 @@ public class IterativePartitioning {
         int binSize=pointsSize/numberOfBins;
         int rest=pointsSize%numberOfBins;
         int usedNumberOfBins=numberOfBins;
-        int dimension = data.size();
+        int dimension = 3;
         if(rest>=0.25*binSize&&rest>=2){
             usedNumberOfBins++;
         }
@@ -449,8 +449,6 @@ public class IterativePartitioning {
             //in each dimension we split off a hypercube with zeros which we will flatten to dim - 1 and process further
             for(int dim : currentCube.getDimensions()) {
 
-                if(dim == currentCube.getDimension()) break; // dimension no longer relevant
-
                 //check which of the points in the current cube are at the minimum value
                 HashSet<Integer> zeroPointsInCube = new HashSet<>(minimumValues.get(dim));
                 zeroPointsInCube.retainAll(currentCube.getPoints());
@@ -468,7 +466,7 @@ public class IterativePartitioning {
                     // we need to figure out which dimension to ignore in building the square
                     int newDim = 0;
                     int[] dimensions = new int[currentCube.getDimension() - 1];
-                    for (int oldDim = 0; oldDim < currentCube.getDimension(); oldDim++) {
+                    for (int oldDim = 0; oldDim < (currentCube.getDimension() - 1); oldDim++) {
                         if (oldDim != dim) {
                             coordinatesOfZeroCube[newDim][0] = currentCoordinates[oldDim][0];
                             coordinatesOfZeroCube[newDim][1] = currentCoordinates[oldDim][1];
@@ -476,29 +474,32 @@ public class IterativePartitioning {
                         }
                     }
 
-                    currentCoordinates[dim][0] = zeroPointsInCube.size();
-
-                    Cube nonZeroCube = new Cube(currentCoordinates, currentCube.getDepth() + 1, currentCube.getDimensions());
                     Cube zeroCube = new Cube(coordinatesOfZeroCube, currentCube.getDepth() + 1, dimensions);
 
                     zeroCube.addPoints(zeroPointsInCube);
                     zeroCube.setPointsAfterZeroSplit(zeroPointsInCube);
 
-                    nonZeroCube.addPoints(nonZeroPoints);
-                    if(nonZeroCube.getDimension() < 3){
-                        HashSet<Integer> lastZeros = new HashSet<>(currentCube.getPointsAfterZeroSplit());
-                        lastZeros.retainAll(nonZeroCube.getPoints());
-                        nonZeroCube.setPointsAfterZeroSplit(lastZeros);
-                    }
                     cubesToConsiderForSplitting.push(zeroCube);
 
-                    if (nonZeroPoints.size() > 0) currentCube = nonZeroCube;
-                    else break;
+                    currentCoordinates[dim][0] = zeroPointsInCube.size();
+                    currentCube = new Cube(currentCoordinates, currentCube.getDepth() + 1, currentCube.getDimensions());
+
+                    if(zeroPointsInCube.size() < currentCoordinates[dim][1]) {
+                        currentCube.addPoints(nonZeroPoints);
+                    }
+                    if(currentCube.getPoints().size() >0){
+                        if (currentCube.getDimension() < 3) {
+                            HashSet<Integer> lastZeros = new HashSet<>(currentCube.getPointsAfterZeroSplit());
+                            lastZeros.retainAll(currentCube.getPoints());
+                            currentCube.setPointsAfterZeroSplit(lastZeros);
+                        }
+                        cubesToConsiderForSplitting.push(currentCube);
+                    }
+                    break;
                 }
             }
 
             if(noZeros) finalCubes.push(currentCube);
-            else if(currentCube.getPoints().size() >0) cubesToConsiderForSplitting.push(currentCube);
         }
 
         return finalCubes;

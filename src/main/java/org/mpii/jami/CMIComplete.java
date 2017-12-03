@@ -69,7 +69,7 @@ public class CMIComplete{
             List<Double> randomizedData= new ArrayList<>(toBeRandomized.size());
             ArrayList<Integer> currentPermutation = randomizedIndices.get(i);
             for (int j = 0; j < toBeRandomized.size(); j++) {
-                randomizedData.set(j, toBeRandomized.get(currentPermutation.get(j)));
+                randomizedData.add(toBeRandomized.get(currentPermutation.get(j)));
             }
             ArrayList<List<Double>> forPartitioning=new ArrayList<>(3);
             forPartitioning.add(origData.get(0));

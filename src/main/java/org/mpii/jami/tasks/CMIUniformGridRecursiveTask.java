@@ -71,7 +71,7 @@ public class CMIUniformGridRecursiveTask extends RecursiveTask<Integer> {
         List<Double> randomized= new ArrayList<>(numOfSamples);
 
         for (int j = 0; j < numOfSamples; j++) {
-            randomized.set(j, origData.get(2).get(currentPermutation.get(j)));
+            randomized.add(origData.get(2).get(currentPermutation.get(j)));
         }
         ArrayList<List<Double>> randData=new ArrayList<>();
         randData.add(origData.get(0));

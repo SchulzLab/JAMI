@@ -492,7 +492,6 @@ public class CompleteRun{
 
         cmiComplete = new CMIComplete(numberOfPermutations, data, this.considerZeros);
 
-        String method = "default";
         switch(method){
             case "cupid": cmiComplete.computeAsCUPID();
                 break;
