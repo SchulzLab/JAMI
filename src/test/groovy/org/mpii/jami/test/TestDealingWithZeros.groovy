@@ -60,7 +60,7 @@ class TestDealingWithZeros extends Specification {
             (it == query)
         }
         double cmi = t.getCmi()
-        cmi closeTo(0.053651, 0.00001)
+        cmi closeTo(0.14611, 0.00001)
 
         def query_reverse = new Triplet("ENSG00000105855", "ENSG00000100767", "MIMAT0000421")
         def t_reverse = completeRun.getTriplets().find{

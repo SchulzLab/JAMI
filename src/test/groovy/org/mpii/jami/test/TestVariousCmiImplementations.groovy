@@ -131,7 +131,7 @@ class TestVariousCmiImplementations extends Specification {
             (it == query)
         }
         double cmi = t.getCmi()
-        cmi closeTo(0.053651, 0.001)
+        cmi closeTo(0.14611, 0.001)
     }
 
     def "test normal with set format"()
@@ -153,7 +153,7 @@ class TestVariousCmiImplementations extends Specification {
             (it == query)
         }
         double cmi = t.getCmi()
-        cmi closeTo(0.053651, 0.001)
+        cmi closeTo(0.14611, 0.001)
     }
 
 }
