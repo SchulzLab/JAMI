@@ -74,6 +74,7 @@ public class IterativePartitioning {
         else{
             computeInverseOrders2(oldSorted,oldInverse,toRecompute, inputData.size());
         }
+        this.combArrays.put(1, initCombArray(1, 2));
         this.combArrays.put(2, initCombArray(2, 4));
         this.combArrays.put(3, initCombArray(3, 8));
 
@@ -94,6 +95,7 @@ public class IterativePartitioning {
 
         maxDeep=Integer.MAX_VALUE;
 
+        this.combArrays.put(1, initCombArray(1, 2));
         this.combArrays.put(2, initCombArray(2, 4));
         this.combArrays.put(3, initCombArray(3, 8));
     }
@@ -191,7 +193,7 @@ public class IterativePartitioning {
 
         int[][] currentCoordinates = currentCube.getCoordinates();
         ArrayList<Cube> newCubes=new ArrayList<>();
-        int dimension = currentCube.getDimensions().length;
+        int dimension = currentCube.getDimension();
 
         for (int i = 0; i < (int) Math.pow(2, dimension); i++) {
             int [] coordinates=new int[2*dimension];
@@ -207,6 +209,7 @@ public class IterativePartitioning {
             }
             Cube newCube=new Cube(coordinates,currentCube.getDepth()+1);
             newCube.setDimensions(currentCube.getDimensions());
+
             newCube.setPointsAfterZeroSplit(currentCube.getPointsAfterZeroSplit());
             newCubes.add(newCube);
         }
@@ -296,7 +299,7 @@ public class IterativePartitioning {
         if(currentCube.getDepth()>=maxDeep){
             return false;
         }
-        int dimCombinat = (int) Math.pow(2, currentCube.getDimensions().length);
+        int dimCombinat = (int) Math.pow(2, currentCube.getDimension());
         int pointsNumber=currentCube.getPoints().size();
         double expected=(double) pointsNumber / dimCombinat;
         double tst=0;
@@ -310,6 +313,10 @@ public class IterativePartitioning {
     }
 
     public boolean pushToStack(Cube newCube){
+        for(int i = 0; i < newCube.getDimension(); i++){
+            if(newCube.getCoordinates()[i][1] == newCube.getCoordinates()[i][0])
+                return(false);
+        }
         return newCube.getPoints().size()>Math.pow(2, newCube.getDimension());
     }
 
@@ -377,7 +384,6 @@ public class IterativePartitioning {
     public double iterativePartitioningBetter(Cube initialCube){
 
         Stack<Cube> stack = new Stack<>();
-
         if(this.considerZeros) stack = splitCubeWithZeros(initialCube);
         else stack.push(initialCube);
 
@@ -441,20 +447,16 @@ public class IterativePartitioning {
         while(!cubesToConsiderForSplitting.empty()){
 
             Cube currentCube = cubesToConsiderForSplitting.pop();
-
-            if(currentCube.getDimension() == 1) continue; //currently not handling one dimensional cubes
-
             boolean noZeros = true;
 
             //in each dimension we split off a hypercube with zeros which we will flatten to dim - 1 and process further
-            for(int dim : currentCube.getDimensions()) {
+            for(int dim = (currentCube.getDimension() - 1); dim >= 0; dim--) {
 
                 //check which of the points in the current cube are at the minimum value
-                HashSet<Integer> zeroPointsInCube = new HashSet<>(minimumValues.get(dim));
+                HashSet<Integer> zeroPointsInCube = new HashSet<>(minimumValues.get(currentCube.getDimensions()[dim]));
                 zeroPointsInCube.retainAll(currentCube.getPoints());
 
                 if (zeroPointsInCube.size() > 1) { //one value at minimum means no duplicates
-                    if(currentCube.getDimension() == 1) break; //only zeros in this cube, cmi is 0.
 
                     noZeros = false;
                     ArrayList<Integer> nonZeroPoints = new ArrayList<>(currentCube.getPoints());
@@ -466,34 +468,38 @@ public class IterativePartitioning {
                     // we need to figure out which dimension to ignore in building the square
                     int newDim = 0;
                     int[] dimensions = new int[currentCube.getDimension() - 1];
-                    for (int oldDim = 0; oldDim < (currentCube.getDimension() - 1); oldDim++) {
+                    for (int oldDim = 0; oldDim < currentCube.getDimension(); oldDim++) {
                         if (oldDim != dim) {
                             coordinatesOfZeroCube[newDim][0] = currentCoordinates[oldDim][0];
                             coordinatesOfZeroCube[newDim][1] = currentCoordinates[oldDim][1];
-                            dimensions[newDim++] = oldDim;
+                            dimensions[newDim++] = currentCube.getDimensions()[oldDim];
                         }
                     }
+                    //if we arrive at dimension 1 splitting of zeros means zeros on all
+                    //three dimensions with no contribution to the CMI.
+                    if(currentCube.getDimension() > 1) {
+                        Cube zeroCube = new Cube(coordinatesOfZeroCube, currentCube.getDepth() + 1, dimensions);
 
-                    Cube zeroCube = new Cube(coordinatesOfZeroCube, currentCube.getDepth() + 1, dimensions);
+                        HashSet<Integer>[] zeroCubePointsAfterZeroSplit = currentCube.getPointsAfterZeroSplit();
+                        for(int d = 0; d < zeroCubePointsAfterZeroSplit.length; d++){
+                            if(d == currentCube.getDimensions()[dim]){
+                                zeroCube.setPointsAfterZeroSplit(currentCube.getDimensions()[dim], zeroPointsInCube);
+                            }
+                            else if(zeroCubePointsAfterZeroSplit[d] != null)
+                                zeroCube.setPointsAfterZeroSplit(d, new HashSet<>(zeroCubePointsAfterZeroSplit[d]));
+                        }
+                        zeroCube.addPoints(zeroPointsInCube);
 
-                    zeroCube.addPoints(zeroPointsInCube);
-                    zeroCube.setPointsAfterZeroSplit(zeroPointsInCube);
-
-                    cubesToConsiderForSplitting.push(zeroCube);
-
+                        cubesToConsiderForSplitting.push(zeroCube);
+                    }
                     currentCoordinates[dim][0] = zeroPointsInCube.size();
-                    currentCube = new Cube(currentCoordinates, currentCube.getDepth() + 1, currentCube.getDimensions());
+                    Cube nonZeroCube = new Cube(currentCoordinates, currentCube.getDepth() + 1, currentCube.getDimensions());
+                    nonZeroCube.setPointsAfterZeroSplit(currentCube.getPointsAfterZeroSplit());
 
-                    if(zeroPointsInCube.size() < currentCoordinates[dim][1]) {
-                        currentCube.addPoints(nonZeroPoints);
-                    }
-                    if(currentCube.getPoints().size() >0){
-                        if (currentCube.getDimension() < 3) {
-                            HashSet<Integer> lastZeros = new HashSet<>(currentCube.getPointsAfterZeroSplit());
-                            lastZeros.retainAll(currentCube.getPoints());
-                            currentCube.setPointsAfterZeroSplit(lastZeros);
-                        }
-                        cubesToConsiderForSplitting.push(currentCube);
+                    nonZeroCube.addPoints(nonZeroPoints);
+
+                    if(nonZeroCube.getPoints().size() >0){
+                        cubesToConsiderForSplitting.push(nonZeroCube);
                     }
                     break;
                 }
@@ -515,7 +521,8 @@ public class IterativePartitioning {
      */
     public double cmiInCube(Cube cube) {
 
-        if (cube.getDimensions().length < 3) return (cmiInSquare(cube));
+        if (cube.getDimensions().length == 2) return (cmiInSquare(cube));
+        else if (cube.getDimensions().length == 1) return (cmiInLine(cube));
 
         int[][] coordinates = cube.getCoordinates();
         int sizePointsInCube = cube.getPoints().size();
@@ -551,9 +558,88 @@ public class IterativePartitioning {
     }
 
     /**
+     * This function computes the mutual information on a cube, ignoring two of the dimensions.
+     * @param line
+     * @return double mutual information of the cube with two dimensions equal to zero / min value
+     */
+    private double cmiInLine(Cube line) {
+        int sizePointsInCube = line.getPoints().size();
+        if(sizePointsInCube == 0) return(0);
+
+        int[][] coordinates = line.getCoordinates();
+
+        //find out which of the three dimensions to ignore
+        int firstDim = line.getDimensions()[0];
+        int flattenedDim1;
+        int flattenedDim2;
+
+        if(firstDim == 0){
+            flattenedDim1 = 1;
+            flattenedDim2 = 2;
+        } else if(firstDim == 1){
+            flattenedDim1 = 0;
+            flattenedDim2 = 2;
+        } else{
+            flattenedDim1 = 0;
+            flattenedDim2 = 1;
+        }
+
+        int nxz = 0;
+        int nyz = 0;
+
+        double cond = 1;
+
+        //case 1 X and Y are zero
+        if(firstDim == 2){
+            for (int i = coordinates[0][0]; i <= coordinates[0][1]; i++) {
+                int point = (sortedIndices.get(firstDim)[i]);
+                int x = inverseSortedIndices.get(flattenedDim1)[point];
+                int y = inverseSortedIndices.get(flattenedDim2)[point];
+
+                HashSet<Integer> pointsX = line.getPointsAfterZeroSplit(flattenedDim1);
+                HashSet<Integer> pointsY = line.getPointsAfterZeroSplit(flattenedDim2);
+                if (pointsX.contains(x)) {
+                    nxz++;
+                }
+                if (pointsY.contains(y)) {
+                    nyz++;
+                }
+            }
+            if(nxz * nyz > 0)
+                cond = ((double) (coordinates[0][1] - coordinates[0][0] + 1 )) *
+                        line.getPoints().size() /
+                        (nxz * nyz);
+        }
+        else{ // case 2 Z and X or Y are zero
+            for (int i : line.getPointsAfterZeroSplit(flattenedDim2)) {
+                int x=inverseSortedIndices.get(firstDim)[i];
+                int y=inverseSortedIndices.get(flattenedDim1)[i];
+
+                HashSet<Integer> pointsY = line.getPointsAfterZeroSplit(flattenedDim1);
+                if(pointsY.contains(y)){
+                    nyz++;
+                }
+
+                if(x>=coordinates[0][0]&&x<=coordinates[0][1]){
+                    nxz++;
+                }
+            }
+            if(nxz * nyz > 0)
+                cond =  ((double) sizePointsInCube) *
+                        line.getPointsAfterZeroSplit(flattenedDim2).size() /
+                        (nyz * nxz);
+        }
+
+        double cmi = sizePointsInCube*Math.log(cond);
+
+        return cmi;
+    }
+
+
+    /**
      * This function computes the mutual information on a cube, ignoring one of the dimensions.
      * @param square
-     * @return double mutual information of the cube with one dimension equal to zero (no entropy)
+     * @return double mutual information of the cube with one dimension equal to zero / min value
      */
     public double cmiInSquare(Cube square){
 
@@ -579,22 +665,24 @@ public class IterativePartitioning {
                 int point = (sortedIndices.get(secondDim)[i]);
                 int x = inverseSortedIndices.get(firstDim)[point];
                 int y = inverseSortedIndices.get(flattenedDim)[point];
-                if(square.getPointsAfterZeroSplit().contains(y)){
+                HashSet<Integer> pointsY = square.getPointsAfterZeroSplit(flattenedDim);
+                if(pointsY.contains(y)){
                     nyz++;
                 }
                 if (x >= coordinates[0][0] && x <= coordinates[0][1]) {
                     nxz++;
                 }
             }
-            if(nxz > 0)
-                cond = ((double) sizePointsInCube) * (coordinates[1][1] - coordinates[1][0] + 1) /
+            if(nxz * nyz > 0)
+                cond = ((double) sizePointsInCube) *
+                        (coordinates[1][1] - coordinates[1][0] + 1) /
                         (nxz * nyz);
         }
 
         //case 3, z has been flattened. we consider all points that were included in the initial square since
         // all those points lie on the z-axis even after further splits.
         else{
-            for (int i : square.getPointsAfterZeroSplit()) {
+            for (int i : square.getPointsAfterZeroSplit(flattenedDim)) {
                 int x=inverseSortedIndices.get(firstDim)[i];
                 int y=inverseSortedIndices.get(secondDim)[i];
 
@@ -606,11 +694,13 @@ public class IterativePartitioning {
                 }
             }
             if(nxz*nyz > 0)
-                cond = ((double) sizePointsInCube) * ((double) square.getPointsAfterZeroSplit().size()) /(nxz*nyz);
+                cond = ((double) sizePointsInCube) *
+                        square.getPointsAfterZeroSplit(flattenedDim).size()
+                        / (nxz*nyz);
         }
-        double mi = sizePointsInCube*Math.log(cond);
+        double cmi = sizePointsInCube*Math.log(cond);
 
-        return mi;
+        return cmi;
     }
 
     /**
@@ -620,7 +710,8 @@ public class IterativePartitioning {
      */
     public double cmiInCubeBetter(Cube cube){
 
-        if (cube.getDimension() < 3) return(cmiInSquare(cube));
+        if (cube.getDimensions().length == 2) return(cmiInSquare(cube));
+        else if (cube.getDimensions().length == 1) return(cmiInLine(cube));
 
         int[][] coordinates = cube.getCoordinates();
         int sizePointsInCube = cube.getPoints().size();
@@ -650,7 +741,7 @@ public class IterativePartitioning {
 
          if(nxz*nyz > 0){
 
-                cond = ((double) nz * sizePointsInCube) / (nxz * nyz);
+                cond = ((double) nz) * sizePointsInCube / (nxz * nyz);
             }
 
         cmi=sizePointsInCube*Math.log(cond);
@@ -668,7 +759,7 @@ public class IterativePartitioning {
             for (int i = 0; i < cube.getDimensions().length; i++) {
                 int currentCoordinate=inverseSortedIndices.get(i)[point];
                 if(currentCoordinate<coordinates[i][0]||currentCoordinate>coordinates[i][1]){
-                    logger.debug("Error in point split: " +
+                    logger.error("Error in point split: " +
                     "Point "+point+" "+i+"-th coordinate is "+currentCoordinate +
                             "but it has to be between "+coordinates[i][0]+", "+coordinates[i][1]);
                 }

@@ -39,7 +39,7 @@ class TestParallelizationVsNoParallelizationVsNaive extends Specification {
     }
 
 
-    def "iterative partitioning with 1 triplet and 1 core"() {
+    def "iterative partitioning with 12 triplets and 1 core"() {
         given:
         def outputFileName = new File(testDir.absolutePath + "/test_triplets_1_core_1_interaction.txt")
         def genesMiRNA_one = new File("data/10_genes_mirna_interactions_triplet_format_1_triplet.txt")
@@ -51,7 +51,7 @@ class TestParallelizationVsNoParallelizationVsNaive extends Specification {
 
         then:
         completeRun.completed == true
-        completeRun.tripletsWrittenToDisk == 4
+        completeRun.tripletsWrittenToDisk == 12
     }
 
     def "iterative partitioning with 1 core"() {
@@ -84,7 +84,7 @@ class TestParallelizationVsNoParallelizationVsNaive extends Specification {
 
     def "iterative Partitioning -1 cores"() {
         given:
-        def outputFileName = new File(testDir.absolutePath + "/test_triplets_max_cores.csv")
+        def outputFileName = new File(testDir.absolutePath + "/test_triplets_max_cores.txt")
 
         when:
         CompleteRun completeRun = new CompleteRun(genesMiRNA,fileGeneExpr,filemiRNAExpr, outputFileName);

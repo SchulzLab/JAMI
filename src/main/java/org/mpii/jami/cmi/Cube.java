@@ -17,15 +17,23 @@ public class Cube {
     private int depth;  //is used only if maxDeep in IterativePartitioning is set to some limiting value
     private int[] dimensions = new int[]{0,1,2};
 
-    public HashSet<Integer> getPointsAfterZeroSplit() {
+    public HashSet<Integer> getPointsAfterZeroSplit(int dim) {
+        return pointsAfterZeroSplit[dim];
+    }
+
+    public HashSet<Integer>[] getPointsAfterZeroSplit() {
         return pointsAfterZeroSplit;
     }
 
-    public void setPointsAfterZeroSplit(HashSet<Integer> pointsAfterZeroSplit) {
+    public void setPointsAfterZeroSplit(int dim, HashSet<Integer> pointsAfterZeroSplit) {
+        this.pointsAfterZeroSplit[dim] = pointsAfterZeroSplit;
+    }
+
+    public void setPointsAfterZeroSplit(HashSet<Integer>[] pointsAfterZeroSplit) {
         this.pointsAfterZeroSplit = pointsAfterZeroSplit;
     }
 
-    private HashSet<Integer> pointsAfterZeroSplit;
+    private HashSet<Integer>[] pointsAfterZeroSplit = new HashSet[3];
 
     /**
      *
