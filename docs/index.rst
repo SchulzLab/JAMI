@@ -69,6 +69,10 @@ JAMI usage overview:
                     regulator
   -h              : show this usage information
   -noheader       : set this option if the input expression files have no headers
+  -nozeros        : set this flag to ignore duplicated zero expression values.
+                   Otherwise JAMIwill group duplicates of the lowest values
+                   such as 0 or the smallest negative value in log scaled data.
+                   (default: false)
   -output FILE    : output file (default: JAMI_CMI_results.txt)
   -pcut N         : optional Benjamini Hochberg adjusted p-value cutoff
                     (default: 1.0)
@@ -321,7 +325,7 @@ The result file can now be used for further research about ceRNA interactions. H
 
 .. figure:: _static/cytoscape_import.png
 
-  Supplemantal Figure 1: Cytoscape import of JAMI network files.
+  Supplemental Figure 1: Cytoscape import of JAMI network files.
 
 Here, all column types are inferred correctly and automatically such that you should press OK. 
 
@@ -341,7 +345,7 @@ We arranged nodes according to the Figure 1 in [Tay2014]_ for facilitating a com
 Performance and Advantages over CUPID
 =====================================
 
-JAMI implements conditional mutual information as proposed by Sumazin et al. in their software tool CUPID. The following two plots illustrates that JAMI reproduces the CMI values computed by CUPID. 
+JAMI implements conditional mutual information as proposed by Sumazin et al. in their software tool CUPID. The following two plots illustrates that JAMI reproduces the CMI values computed by CUPID (if the -nozeros flag is set, see `Dealing with zero expression values`_ for details). 
 
 .. figure:: _static/cmi_comparison.png
 
@@ -357,6 +361,7 @@ We propagate the use of JAMI instead of CUPID due to the following advantages:
 
 - CUPID is implemented in Matlab whereas the JAMI implementation makes use of efficient data structures implemented in Java, leading to a drastic improvement in the performance even in a single thread.
 - JAMI implements multi-threaded processing of triplets and thus achieves a further performance gain on multi-core architectures and high-performance computing environments.
+- JAMI can deal with zero expression values (and negative values introduced through pseudocounts in log2-scaled data). See `Dealing with zero expression values`_ for details.
 - CUPID requires separate expression and miRNA interaction files as input for every pair of gene. In contrast, JAMI accepts a single gene and a single miRNA expression matrix and offers great flexibility with regards to defining the triplets of interest, making it much more convenient to use JAMI in settings where several genes are of interest. 
 - The triplet format further allows for splitting the workload conveniently across a distributed compute infrastructure. 
 - The use of Matlab requires a license whereas JAMI is completly free to use.
@@ -372,6 +377,20 @@ We propagate the use of JAMI instead of CUPID due to the following advantages:
 **NOTE:** When computing a large number of permutations for a small number of interactions in multi-threaded mode it is advisable to reduce the batch size with the option -batch. With the default batch size of 100 the work might otherwise be left to a single thread. In contrast, if the number of considered interactions is large it may be helpful to increase the batch size to reduce the overhead of the parallel execution. 
 
 **NOTE:** We only consider step III of the CUPID software tool for a fair comparison. 
+
+===================================
+Dealing with zero expression values
+===================================
+
+Before conditional mutual information can be computed, JAMI and CUPID transform the real valued input expression values into ranks. Due to this, the algorithm does not handle duplicated values correctly. While duplicates are typically not expected in gene and miRNA expression data, there is one exception. If no expression is measured in a sample (e.g. no reads have been mapped to a gene in next-generation sequencing data), the expression value will be zero. For lowly expressed genes, these zero expression values can make up a sizable fraction of the expression data, thus introducing a considerable bias into the CMI computation. To address this issue, we extended the CMI algorithm in JAMI to handle zero expression values explicitly. More precisely, we introduce a preprocessing step in which zero expression values are split off the initial cube into a series of subcubes in which the corresponding dimension containing zero expression values is collapsed. The resulting square keeps a memory of the zero values that have been collapsed on the third axis in a HashSet to facilitate correct computation. If zero expression values are found on a second dimension this will also be collapsed, resulting in a line. If zero expression values are found on the third axis those samples will be split off and ignored since they do not contribute to the final CMI value. Squares and lines are processed similar to cubes in that they are split at the center until they are balanced according to the chi squared test. In this way, we avoid splitting intervals of zero expression values and assigning arbitrary ranks to these values. This allows us to compute accurate CMI values under the assumption that no other values are duplicated. To identify zero expression values, we check if the minimal expression value is duplicated. Thus, we can also accommodate log2 scaled data in which a pseudocount is added to obtain a large negative value for the zero expression case. For the ceRNA network introduced above, we show that considering zero expression values has a large impact on the results: 
+
+.. figure:: _static/consider_zeros_CMI.png
+
+ Supplemental Figure 6: Comparison of CMI values when accounting for duplicated zero expression values to the -nozeros mode in which they are ignored. It is evident that the CMI values are affected by this. Notably, the -nozero mode produces positive CMI values even when a gene or miRNA is not expressed.
+
+.. figure:: _static/consider_zeros_pval.png
+
+ Supplemental Figure 7: Comparison of p-values when accounting for duplicated zero expression values to the -nozero mode in which they are ignored. As can be expected from the differences in CMI values shown in Supplemental Figure 6, p-values may change drastically when zero expression values are present.
 
 ===========
 References

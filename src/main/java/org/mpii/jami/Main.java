@@ -46,8 +46,9 @@ public class Main {
     @Option(name="-method", hidden = true, usage = "for using an alternative CMI method. One of cupid, uniform, pseudouniform.")
     String method = SettingsManager.defaultMethod;
 
-    @Option(name="-zeros", usage = "deal with missing expression values, i.e. duplicates of the lowest values such as 0 or the smallest negative value in log scaled data.")
-    boolean considerZeros = false;
+    @Option(name="-nozeros", usage = "set this flag to ignore duplicated zero expression values. Otherwise JAMI" +
+            "will group duplicates of the lowest values such as 0 or the smallest negative value in log scaled data.")
+    boolean nozeros = false;
 
     @Option(name="-bins", hidden = true, usage = "number of bins when using uniform or pseudouniform CMI computation.")
     int numberOfBins = 0;
@@ -156,7 +157,7 @@ public class Main {
             settings.put("numberOfPermutations", numberOfPermutations);
             settings.put("pValueCutoff", pValueCutoff);
             settings.put("batchSize", batchSize);
-            settings.put("considerZeros", considerZeros);
+            settings.put("considerZeros", !nozeros);
             if(genes != null) settings.put("selectedGenes", new HashSet<>(genes));
             else settings.put("selectedGenes", null);
             settings.put("restricted", restricted);
