@@ -7,8 +7,6 @@ General Description
 
 This document describes the usage of the JAMI software. Source code and executables are available on `github <https://github.com/SchulzLab/JAMI>`_. 
 
-The latest version of this document can be accessed `here <jami.readthedocs.io/en/latest/index.html>`_.
-
 The goal of JAMI is to infer ceRNA networks from paired gene and miRNA expression data.
 The ceRNA hypothesis proposed by Salmena et al. [Salmena2011]_ suggests that mRNA transcript are in competition over a limited pool of miRNAs they share binding sites for. A competing endogenous RNA is thus a mRNA that excerts regulatory control over the expression of other mRNAs (coding or non-coding genes) via draining them of repressive miRNAs. To quantify the regulatory effect of one gene (the modulator) over another gene (the target) via a specific miRNA, Sumazin et al. [Sumazin2011]_ proposed the use of conditional mutual information, which was implemented as part of the CUPID software [Chiu2015]_ implemented in Matlab. Here we present JAMI, a tool we implemented in Java with the aim of speeding up the computation of CMI to a level that permits large-scale computations of thousands of such interactions in reasonable time.
 
@@ -291,7 +289,7 @@ miRcode in JAMI set format
 
 **NOTE:** You do no need to decompress this file, as JAMI can handle gzip compressed files automatically.
 
-**NOTE** The TCGA data uses the version number of the ensembl gene ids whereas the mircode data uses the unversioned ids. Interested users thus need to be careful to omit the last part of the gene id, e.g. ENSG00000100767.5 would be ENSG00000100767).
+**NOTE:** The TCGA data uses the version number of the Ensembl gene ids whereas the mircode data uses the unversioned ids. Interested users thus need to be careful to omit the last part of the gene id, e.g. ENSG00000100767.5 would be ENSG00000100767).
 
 We next process these data with JAMI to understand how many miRNAs are involved in the cross-talk of these well-known ceRNAs in breast cancer. The following command will compute CMI values and p-values for approximately 10,000 interactions (triplets).
 
