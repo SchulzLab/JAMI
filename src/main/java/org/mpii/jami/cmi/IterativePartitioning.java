@@ -10,11 +10,12 @@ import java.util.*;
 
 /**
  * Created by fuksova on 11/9/15.
- * Iterative partitioning computed in the same way as in Cupid. One of its drawbacks is that it assigns nonzero
- * CMI value when all values in data.get(1) are equal to zero. In combination with other principles used in Cupid,
- * such data sample can be even evaluated as significant.
- * For this computation original double values of points are replaced by their integer order in every dimension. This
- * information is stored in inverseSortedIndices
+ * Iterative partitioning computed in the same way as in Cupid if considerZeros=false. In this case, it assigns nonzero
+ * CMI value even when all values in data.get(1) or data.get(0) are constantly equal to zero.
+ * This may even result in evaluating such interaction as significant.
+ * If we want to handle zero expression values correctly, we need to set considerZeros=true.
+ * In both cases, original double values of points are replaced by their rank in every dimension. This
+ * information is stored in inverseSortedIndices. If considerZeros=true, multiple points can have zero rank.
  * Points are stored in CMI grid cells in form of their indices in the original input data structure.
  */
 public class IterativePartitioning {
@@ -299,9 +300,7 @@ public class IterativePartitioning {
 
 
     /**
-     * Evaluates whether currentCube or its split: newCubes should be used for CMI computation
-     * This method is basically not reliable because it incorporates some strange heuristic based for example on
-     * some magic value in chiSquareCutoffs[dimension-1] which is claimed to from chi2 statistical table but it is not
+     * Decides whether currentCube should be split
      * @param currentCube
      * @param newCubes
      * @return if true, use new Cubes (split), if false, use currentCube (do not split)

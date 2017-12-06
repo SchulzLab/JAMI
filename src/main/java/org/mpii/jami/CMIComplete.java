@@ -103,8 +103,6 @@ public class CMIComplete{
     /**
      * This function should be used for CMI computation by IterativePartitioning and p-value estimation by randomization
      * of the third data array. This implementation uses the most efficient version of IterativePartitioning.
-     * However, drawbacks of this method should be considered. For instance, if all values in the
-     * second data set are zeros, this methods outputs nonzero CMI value which can be moreover evaluated as significant.
      */
     public void computeIterativePartitioning(Cube initialCube, double pSignificance){
         IterativePartitioning ip=new IterativePartitioning(origData);
