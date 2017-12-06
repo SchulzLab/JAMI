@@ -84,6 +84,7 @@ public class CMIRecursiveTask extends RecursiveTask<Integer> {
         ipRand.setMaxDeep(ip.getMaxDeep());
         ipRand.setConsiderZeros(ip.ConsiderZeros());
         ipRand.setMinimumValues(ip.getMinimumValues());
+        ipRand.setChiSquareCutoffs(ip.getChiSquareCutoffs());
         return (ipRand.iterativePartitioningBetter(initialCube));
     }
 }

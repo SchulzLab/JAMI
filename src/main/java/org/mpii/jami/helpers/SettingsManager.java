@@ -12,6 +12,8 @@ public class SettingsManager {
     public static final int defaultPermutations = 1000;
     public static final String defaultMethod = "";
     public static final int defaultThreads = -1;
+    public static final double defaultPChiSquare = 0.05;
+    public static final double defaultPValueCutoff = 1.0;
 
     public SettingsManager(){
         this.settings = new HashMap<>();
@@ -22,11 +24,12 @@ public class SettingsManager {
         settings.put("tripleFormat", true);
         settings.put("numberOfThreads", defaultThreads);
         settings.put("numberOfPermutations", defaultPermutations);
-        settings.put("pValueCutoff", 1.0);
+        settings.put("pValueCutoff", defaultPValueCutoff);
         settings.put("selectedGenes", null);
         settings.put("restricted", false);
         settings.put("batchSize", defaultBatchSize);
         settings.put("considerZeros", true);
+        settings.put("pChiSquare", defaultPChiSquare);
     }
 
     public SettingsManager(HashMap<String, Object> settings){

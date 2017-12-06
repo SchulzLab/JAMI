@@ -175,6 +175,3 @@ texinfo_documents = [
      author, 'JAMI', 'Fast computation of conditional mutual information for ceRNA network inference.',
      'Miscellaneous'),
 ]
-
-
-

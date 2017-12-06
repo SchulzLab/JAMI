@@ -45,6 +45,7 @@ public class CompleteRun{
     private int batchSize;
     final double progressMinDiff = 0.01;
     private boolean restricted = false;
+    private double pChiSquare;
     private NonRepetitiveLogger nonRepetitiveLogger = new NonRepetitiveLogger();
 
     public CompleteRun(File fileGenesMiRNA, File fileGeneExpr, File filemiRExpr, File outputFile,
@@ -66,6 +67,7 @@ public class CompleteRun{
         this.restricted = (boolean) settingsManager.get("restricted");
         this.batchSize = (int) settingsManager.get("batchSize");
         this.considerZeros = (boolean) settingsManager.get("considerZeros");
+        this.pChiSquare = (double) settingsManager.get("pChiSquare");
     }
 
     public String getSeparator() {
@@ -499,7 +501,7 @@ public class CompleteRun{
                 break;
             case "pseudouniform": cmiComplete.computePseudoUniformGrid(this.numberOfBins);
                 break;
-            default: cmiComplete.computeIterativePartitioning(initialCube);
+            default: cmiComplete.computeIterativePartitioning(initialCube, pChiSquare);
         }
         result[0]=cmiComplete.cmi;
         result[1]=cmiComplete.pValue;

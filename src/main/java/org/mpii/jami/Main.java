@@ -67,7 +67,10 @@ public class Main {
     boolean noheader = false;
 
     @Option(name="-pcut",usage="optional Benjamini Hochberg adjusted p-value cutoff")
-    double pValueCutoff = 1.0;
+    double pValueCutoff = SettingsManager.defaultPValueCutoff;
+
+    @Option(name="-pchi", usage = "significance level for the chi-squared test in adaptive partitioning")
+    double pChiSquare = SettingsManager.defaultPChiSquare;
 
     @Option(name="-genes", handler = StringArrayOptionHandler.class, usage="filter for miRNA triplets with this gene or these genes as regulator")
     List<String> genes;
@@ -158,6 +161,7 @@ public class Main {
             settings.put("pValueCutoff", pValueCutoff);
             settings.put("batchSize", batchSize);
             settings.put("considerZeros", !nozeros);
+            settings.put("pChiSquare", pChiSquare);
             if(genes != null) settings.put("selectedGenes", new HashSet<>(genes));
             else settings.put("selectedGenes", null);
             settings.put("restricted", restricted);

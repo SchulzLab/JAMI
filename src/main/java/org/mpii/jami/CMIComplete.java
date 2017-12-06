@@ -1,5 +1,6 @@
 package org.mpii.jami;
 
+import org.apache.commons.math3.distribution.ChiSquaredDistribution;
 import org.mpii.jami.cmi.CMIUniform;
 import org.mpii.jami.cmi.Cube;
 import org.mpii.jami.cmi.IterativePartitioning;
@@ -87,6 +88,17 @@ public class CMIComplete{
 
     }
 
+    public static double[] computeChiSquareCutoffs(double pSignificance, int dimensions){
+        double[] chiSquareCutoffs = new double[dimensions];
+        for(int dim = 0; dim < dimensions; dim++){
+            double df = Math.pow(2, dim + 1) - 1;
+            ChiSquaredDistribution chisquare = new ChiSquaredDistribution(df);
+            double chi = chisquare.inverseCumulativeProbability(1 - pSignificance);
+            chiSquareCutoffs[dim] = chi;
+        }
+        return(chiSquareCutoffs);
+    }
+
 
     /**
      * This function should be used for CMI computation by IterativePartitioning and p-value estimation by randomization
@@ -94,10 +106,11 @@ public class CMIComplete{
      * However, drawbacks of this method should be considered. For instance, if all values in the
      * second data set are zeros, this methods outputs nonzero CMI value which can be moreover evaluated as significant.
      */
-    public void computeIterativePartitioning(Cube initialCube){
+    public void computeIterativePartitioning(Cube initialCube, double pSignificance){
         IterativePartitioning ip=new IterativePartitioning(origData);
         ip.setMaxDeep(maxDeep);
         ip.setConsiderZeros(considerZeros);
+        ip.setChiSquareCutoffs(computeChiSquareCutoffs(pSignificance, origData.size()));
         cmi=ip.iterativePartitioningBetter(initialCube);
 
         //code to split permutations into subtasks... we now rather split by triplet for better performance with
