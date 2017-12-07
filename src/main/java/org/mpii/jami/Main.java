@@ -11,7 +11,6 @@ import org.mpii.jami.helpers.HelpOptionHandler;
 import org.mpii.jami.helpers.SettingsManager;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -46,9 +45,10 @@ public class Main {
     @Option(name="-method", hidden = true, usage = "for using an alternative CMI method. One of cupid, uniform, pseudouniform.")
     String method = SettingsManager.defaultMethod;
 
-    @Option(name="-nozeros", usage = "set this flag to ignore duplicated zero expression values. Otherwise JAMI" +
+    @Option(name="-rankzeros", usage = "set this flag to rank values with zero expression values. This is not recommended" +
+            "because normally JAMI" +
             "will group duplicates of the lowest values such as 0 or the smallest negative value in log scaled data.")
-    boolean nozeros = false;
+    boolean rankzeros = false;
 
     @Option(name="-bins", hidden = true, usage = "number of bins when using uniform or pseudouniform CMI computation.")
     int numberOfBins = 0;
@@ -160,7 +160,7 @@ public class Main {
             settings.put("numberOfPermutations", numberOfPermutations);
             settings.put("pValueCutoff", pValueCutoff);
             settings.put("batchSize", batchSize);
-            settings.put("considerZeros", !nozeros);
+            settings.put("considerZeros", !rankzeros);
             settings.put("pChiSquare", pChiSquare);
             if(genes != null) settings.put("selectedGenes", new HashSet<>(genes));
             else settings.put("selectedGenes", null);

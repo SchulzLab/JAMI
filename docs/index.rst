@@ -69,10 +69,9 @@ JAMI usage overview:
                     regulator
   -h              : show this usage information
   -noheader       : set this option if the input expression files have no headers
-  -nozeros        : set this flag to ignore duplicated zero expression values.
-                   Otherwise JAMIwill group duplicates of the lowest values
-                   such as 0 or the smallest negative value in log scaled data.
-                   (default: false)
+  -rankzeros      : set this flag to rank values with zero expression values.
+                    This is not recommended because normally JAMI will group duplicates of the lowest values such as 0 or the smallest negative value in log scaled data.
+                    (default: false)
   -output FILE    : output file (default: JAMI_CMI_results.txt)
   -pchi N         : significance level for the chi-squared test in adaptive
                    partitioning (default: 0.05)
@@ -347,7 +346,7 @@ We arranged nodes according to the Figure 1 in [Tay2014]_ for facilitating a com
 Performance and Advantages over CUPID
 =====================================
 
-JAMI implements conditional mutual information as proposed by Sumazin et al. in their software tool CUPID. The following two plots illustrates that JAMI reproduces the CMI values computed by CUPID (if the -nozeros flag is set, see `Dealing with zero expression values`_ for details). 
+JAMI implements conditional mutual information as proposed by Sumazin et al. in their software tool CUPID. The following two plots illustrates that JAMI reproduces the CMI values computed by CUPID (if the -rankzeros flag is set, see `Dealing with zero expression values`_ for details). 
 
 .. figure:: _static/cmi_comparison.png
 
@@ -388,13 +387,13 @@ Before conditional mutual information can be computed, JAMI and CUPID transform 
 
 .. figure:: _static/consider_zeros_CMI.png
 
- Supplemental Figure 6: Comparison of CMI values when accounting for duplicated zero expression values to the -nozeros mode in which they are ignored. It is evident that the CMI values are affected by this. Notably, the -nozero mode produces positive CMI values even when a gene or miRNA is not expressed.
+ Supplemental Figure 6: Comparison of CMI values when accounting for duplicated zero expression values to the -rankzeros mode in which they are ignored. It is evident that the CMI values are affected by this. Notably, the -nozero mode produces positive CMI values even when a gene or miRNA is not expressed.
 
 .. figure:: _static/consider_zeros_pval.png
 
  Supplemental Figure 7: Comparison of p-values when accounting for duplicated zero expression values to the -nozero mode in which they are ignored. As can be expected from the differences in CMI values shown in Supplemental Figure 6, p-values may change drastically when zero expression values are present.
 
-Accounting for the bias introduced by duplicated zero expression value improves the results of the ceRNA interaction network we computed above. To test this, we iterated through each modulator gene and computed the ranks (highest CMI with rank = 1) of its interaction when accounting for zeros and when not accounting for zeros (-nozeros mode). Next, we identified miRNA interactions with experimental evidence using miRTarBase [Chou2015]_ (version 7, downloaded December 6, 2017). We hypothesize that accounting for zeros improves the ranks of miRNA interactions with experimental evidence. Indeed, for the ceRNA network of Tay et al. [Tay2014]_, we observe a significant improvement in the rank (wilcoxon test p = 0.037 two-sided, 0.019 one-sided).
+Accounting for the bias introduced by duplicated zero expression value improves the results of the ceRNA interaction network we computed above. To test this, we iterated through each modulator gene and computed the ranks (highest CMI with rank = 1) of its interaction when accounting for zeros and when not accounting for zeros (-rankzeros mode). Next, we identified miRNA interactions with experimental evidence using miRTarBase [Chou2015]_ (version 7, downloaded December 6, 2017). We hypothesize that accounting for zeros improves the ranks of miRNA interactions with experimental evidence. Indeed, for the ceRNA network of Tay et al. [Tay2014]_, we observe a significant improvement in the rank  (wilcoxon test p = 0.049 two-sided, 0.025 one-sided).
 
 .. figure:: _static/mirtarbase_rank_evidence_global.png
 
