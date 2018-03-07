@@ -342,6 +342,12 @@ We arranged nodes according to the Figure 1 in [Tay2014]_ for facilitating a com
   
   Supplemental Figure 3: The same ceRNA network as in Supplemental Figure 2 with circular layout.
 
+===============
+Using JAMI in R
+===============
+
+JAMI can also be used in the R statistical environment. To this end, we have implemented a R wrapper package that provides direct access to JAMI's functionality in R without compromising on speed, i.e. scripting languages such as R are known to be slower than native implementations in Java or C++. The R package called RJAMI is also available on `github <https://github.com/SchulzLab/RJAMI>`_.
+
 =====================================
 Performance and Advantages over CUPID
 =====================================
