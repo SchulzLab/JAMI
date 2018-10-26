@@ -27,14 +27,25 @@ public class BenjaminiHochberg {
 
     public static double[] adjustPValues(double[] pValues){
 
-        NaturalRanking ranking = new NaturalRanking(TiesStrategy.MAXIMUM);
+        NaturalRanking ranking = new NaturalRanking(TiesStrategy.SEQUENTIAL);
 
         double[] pValueRanks = ranking.rank(pValues);
+        int[] pValueIndices = new int[pValues.length];
+
+        for(int i = 0; i < pValues.length; i++){
+            pValueIndices[((int) pValueRanks[i])-1] = i;
+        }
         double[] pValuesAdjusted = new double[pValues.length];
 
         for(int i = 0; i < pValues.length; i++){
-            pValuesAdjusted[i] = Math.min(pValues[i] * (pValues.length / pValueRanks[i]),
-                    pValues[i+1] * (pValues.length / pValueRanks[i+1]));
+            int k = pValueIndices[i];
+
+            if(i == (pValues.length - 1)) pValuesAdjusted[k] = Math.min(pValues[k] * (pValues.length / pValueRanks[k]), 1);
+            else{
+                int l = pValueIndices[i+1];
+                pValuesAdjusted[k] = Math.min(pValues[k] * (pValues.length / pValueRanks[k]),
+                        pValues[l] * (pValues.length / pValueRanks[l]));
+            }
         }
 
         return(pValuesAdjusted);
