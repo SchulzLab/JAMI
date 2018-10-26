@@ -33,19 +33,17 @@ public class BenjaminiHochberg {
         int[] pValueIndices = new int[pValues.length];
 
         for(int i = 0; i < pValues.length; i++){
-            pValueIndices[((int) pValueRanks[i])-1] = i;
+            pValueIndices[pValues.length - (int) pValueRanks[i]] = i;
         }
         double[] pValuesAdjusted = new double[pValues.length];
+
+        double cumulativeMin = 1.0;
 
         for(int i = 0; i < pValues.length; i++){
             int k = pValueIndices[i];
 
-            if(i == (pValues.length - 1)) pValuesAdjusted[k] = Math.min(pValues[k] * (pValues.length / pValueRanks[k]), 1);
-            else{
-                int l = pValueIndices[i+1];
-                pValuesAdjusted[k] = Math.min(pValues[k] * (pValues.length / pValueRanks[k]),
-                        pValues[l] * (pValues.length / pValueRanks[l]));
-            }
+            pValuesAdjusted[k] = Math.min(1.0, Math.min(cumulativeMin, pValues[k] * (pValues.length / pValueRanks[k])));
+            cumulativeMin = Math.min(cumulativeMin, pValuesAdjusted[k]);
         }
 
         return(pValuesAdjusted);
