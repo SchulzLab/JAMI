@@ -10,6 +10,10 @@ This document describes the usage of the JAMI software. Source code and executab
 The goal of JAMI is to infer ceRNA networks from paired gene and miRNA expression data.
 The ceRNA hypothesis proposed by Salmena et al. [Salmena2011]_ suggests that mRNA transcript are in competition over a limited pool of miRNAs they share binding sites for. A competing endogenous RNA is thus a mRNA that excerts regulatory control over the expression of other mRNAs (coding or non-coding genes) via draining them of repressive miRNAs. To quantify the regulatory effect of one gene (the modulator) over another gene (the target) via a specific miRNA, Sumazin et al. [Sumazin2011]_ proposed the use of conditional mutual information, which was implemented as part of the CUPID software [Chiu2015]_ implemented in Matlab. Here we present JAMI, a tool we implemented in Java with the aim of speeding up the computation of CMI to a level that permits large-scale computations of thousands of such interactions in reasonable time.
 
+If you use JAMI in your research please cite:
+
+`Hornakova, A., List, M., Vreeken, J., & Schulz, M. H. (2018). JAMI-Fast computation of Conditional Mutual Information for ceRNA network analysis. Bioinformatics, 1, 2. <https://doi.org/10.1093/bioinformatics/bty221>`_
+
 Conditional Mutual Information
 ------------------------------
 
@@ -341,6 +345,12 @@ We arranged nodes according to the Figure 1 in [Tay2014]_ for facilitating a com
 .. figure:: _static/tay_et_al_circular.png
   
   Supplemental Figure 3: The same ceRNA network as in Supplemental Figure 2 with circular layout.
+
+===============
+Using JAMI in R
+===============
+
+JAMI can also be used in the R statistical environment. To this end, we have implemented a R wrapper package that provides direct access to JAMI's functionality in R without compromising on speed, i.e. scripting languages such as R are known to be slower than native implementations in Java or C++. The R package called RJAMI is also available on `github <https://github.com/SchulzLab/RJAMI>`_.
 
 =====================================
 Performance and Advantages over CUPID
