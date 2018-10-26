@@ -1,6 +1,5 @@
 package org.mpii.jami;
 
-
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.kohsuke.args4j.Argument;
@@ -12,10 +11,8 @@ import org.mpii.jami.helpers.SettingsManager;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Properties;
+import java.util.*;
+import java.util.concurrent.ForkJoinPool;
 
 /**
  * Created by fuksova on 10/7/15.
@@ -55,6 +52,9 @@ public class Main {
 
     @Option(name="-perm",usage="number of permutations for inferring empirical p-values.")
     int numberOfPermutations = SettingsManager.defaultPermutations;
+
+    @Option(name="-seed",usage="random seed to be used for permutations.")
+    long randomSeed = -1;
 
     @Option(name="-threads",usage="number of threads to use. -1 to use one less than the number of available CPU cores")
     int numberOfThreads = SettingsManager.defaultThreads;
@@ -165,6 +165,8 @@ public class Main {
             if(genes != null) settings.put("selectedGenes", new HashSet<>(genes));
             else settings.put("selectedGenes", null);
             settings.put("restricted", restricted);
+            settings.put("seed", randomSeed);
+
             SettingsManager settingsManager = new SettingsManager(settings);
 
             CompleteRun completeRun = new CompleteRun(genesMiRNA,fileGeneExpr,filemiRNAExpr,outputFile, settingsManager);

@@ -47,6 +47,7 @@ public class CompleteRun{
     private boolean restricted = false;
     private double pChiSquare;
     private NonRepetitiveLogger nonRepetitiveLogger = new NonRepetitiveLogger();
+    long seed;
 
     public CompleteRun(File fileGenesMiRNA, File fileGeneExpr, File filemiRExpr, File outputFile,
                        SettingsManager settingsManager){
@@ -68,6 +69,7 @@ public class CompleteRun{
         this.batchSize = (int) settingsManager.get("batchSize");
         this.considerZeros = (boolean) settingsManager.get("considerZeros");
         this.pChiSquare = (double) settingsManager.get("pChiSquare");
+        this.seed = (long) settingsManager.get("seed");
     }
 
     public String getSeparator() {
@@ -148,6 +150,10 @@ public class CompleteRun{
 
     public List<Triplet> getOmittedTriplets() {
         return omittedTriplets;
+    }
+
+    public void setSeed(long seed){
+        this.seed = seed;
     }
 
     public CompleteRun(File fileGenesMiRNA, File fileGeneExpr, File filemiRExpr, File outputFile){
@@ -247,7 +253,7 @@ public class CompleteRun{
 
         logger.info("" + interactions.getTriplets().size() + " interactions (triplets) mapped to expression data.");
 
-        CMIComplete.initRandomized(geneExpr.getNumberOfSamples(), numberOfPermutations);
+        if(this.method == "cupid") CMIComplete.initRandomized(geneExpr.getNumberOfSamples(), numberOfPermutations);
 
         //parallelization
         ForkJoinPool fjpool;
@@ -492,7 +498,7 @@ public class CompleteRun{
         data.add(geneCondData);  //this is randomized
         CMIComplete cmiComplete;
 
-        cmiComplete = new CMIComplete(numberOfPermutations, data, this.considerZeros);
+        cmiComplete = new CMIComplete(numberOfPermutations, data, this.considerZeros, this.seed);
 
         switch(method){
             case "cupid": cmiComplete.computeAsCUPID();

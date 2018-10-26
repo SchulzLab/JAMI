@@ -271,10 +271,6 @@ public class IterativePartitioning {
 
             }
 
-            for (Cube newCube : newCubes) {
-                testCube(newCube);
-            }
-
             if(useSplit(currentCube,newCubes)||currentCube.equals(initialCube)){
                 for (int i = 0; i < dimCombinat; i++) {
                     Cube smallCube = newCubes.get(i);

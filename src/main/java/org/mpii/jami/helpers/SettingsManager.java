@@ -1,6 +1,7 @@
 package org.mpii.jami.helpers;
 
 import java.util.HashMap;
+import java.util.Random;
 
 /**
  * Created by mlist on 10/27/17.
@@ -30,6 +31,7 @@ public class SettingsManager {
         settings.put("batchSize", defaultBatchSize);
         settings.put("considerZeros", true);
         settings.put("pChiSquare", defaultPChiSquare);
+        settings.put("seed", -1L);
     }
 
     public SettingsManager(HashMap<String, Object> settings){
