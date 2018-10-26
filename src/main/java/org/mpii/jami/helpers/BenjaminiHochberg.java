@@ -33,7 +33,8 @@ public class BenjaminiHochberg {
         double[] pValuesAdjusted = new double[pValues.length];
 
         for(int i = 0; i < pValues.length; i++){
-            pValuesAdjusted[i] = Math.min(pValues[i] * (pValues.length / pValueRanks[i]), 1.0);
+            pValuesAdjusted[i] = Math.min(pValues[i] * (pValues.length / pValueRanks[i]),
+                    pValues[i+1] * (pValues.length / pValueRanks[i+1]));
         }
 
         return(pValuesAdjusted);
